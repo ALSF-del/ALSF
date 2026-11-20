@@ -1,0 +1,22 @@
+
+{
+  "id": "./",
+  "name": "ALSF - Centre de commandement",
+  "short_name": "ALSF",
+  "description": "Quartier général numérique de l'ALSF",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080d12",
+  "theme_color": "#080d12",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
