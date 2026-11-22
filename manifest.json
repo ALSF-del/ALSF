@@ -8,9 +8,11 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
   "background_color": "#080d12",
   "theme_color": "#080d12",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "./icon.svg",
