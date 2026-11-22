@@ -1,202 +1,639 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#05080a" />
-  <title>ALSF | Centre de Commandement</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <link rel="apple-touch-icon" href="icon.svg" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080d12">
+  <meta name="description" content="ALSF — Quartier général numérique">
+  <meta name="application-name" content="ALSF">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ALSF">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <title>ALSF | Centre de commandement</title>
 
-  <script src="https://jsdelivr.net"></script>
-  <link rel="stylesheet" href="https://unpkg.com" />
-  <script src="https://unpkg.com"></script>
-  <link rel="stylesheet" href="style.css" />
-
-  <script>
-    const SUPABASE_URL = 'COLLE_TON_PROJECT_URL_ICI';
-    const SUPABASE_KEY = 'COLLE_TA_PUBLISHABLE_KEY_ICI';
-  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#070c11; --surface:#0d151d; --surface-2:#111e28;
+      --surface-3:#172733; --line:#243744; --line-soft:#1a2a35;
+      --green:#43f0a5; --green-soft:#43f0a51c; --cyan:#45d9f5;
+      --text:#eaf4f7; --muted:#8ca0aa; --gold:#e8c36c;
+      --red:#ff777e; --shadow:0 18px 50px #0008;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0; min-height:100vh; color:var(--text);
+      background:
+        radial-gradient(ellipse at 12% -12%,#164d3a55,transparent 36%),
+        radial-gradient(ellipse at 95% 8%,#10465a38,transparent 31%),
+        linear-gradient(180deg,#080e14,var(--bg) 55%);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+    .app-shell{max-width:1440px;margin:auto;min-height:100vh}
+    .topbar{
+      position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding:13px clamp(16px,3vw,36px);border-bottom:1px solid #29404b99;
+      background:#080e14d9;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)
+    }
+    .brand{display:flex;align-items:center;gap:12px;min-width:0}
+    .brand-logo{
+      width:44px;height:44px;display:grid;place-items:center;flex:none;overflow:hidden;
+      border:1px solid #43f0a577;border-radius:13px;background:linear-gradient(145deg,#12392e,#10212b);
+      box-shadow:0 0 22px #43f0a51a,inset 0 0 18px #43f0a510
+    }
+    .brand-logo img{width:100%;height:100%;object-fit:contain}
+    .brand-fallback{font-weight:950;font-size:12px;letter-spacing:-1px;color:var(--green)}
+    .brand-name{font-weight:900;letter-spacing:3px;font-size:15px}
+    .brand-sub{font-size:9px;letter-spacing:1.8px;color:var(--muted);margin-top:3px}
+    .top-actions{display:flex;align-items:center;gap:12px}
+    .system-state{display:flex;align-items:center;gap:8px;color:#9aecc7;font-size:10px;letter-spacing:1.5px;white-space:nowrap}
+    .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 #43f0a577;animation:pulse 2s infinite}
+    @keyframes pulse{70%{box-shadow:0 0 0 8px #43f0a500}100%{box-shadow:0 0 0 0 #43f0a500}}
+    .install-btn,.primary-btn,.secondary-btn,.danger-btn{
+      border:1px solid #43f0a566;border-radius:11px;padding:10px 14px;color:var(--green);
+      background:linear-gradient(135deg,#43f0a51c,#45d9f50c);font-weight:750;font-size:12px;
+      transition:transform .2s,border-color .2s,background .2s
+    }
+    .install-btn:hover,.primary-btn:hover,.secondary-btn:hover,.danger-btn:hover{transform:translateY(-2px);border-color:var(--green);background:#43f0a526}
+    .layout{display:grid;grid-template-columns:228px minmax(0,1fr);gap:28px;padding:26px clamp(16px,3vw,36px) 42px}
+    .sidebar{position:sticky;top:88px;height:max-content;padding:14px;border:1px solid var(--line-soft);border-radius:var(--radius);background:#0c151dd9}
+    .side-label,.eyebrow{font-size:10px;letter-spacing:2.2px;font-weight:850;color:var(--green);text-transform:uppercase}
+    .side-label{padding:7px 10px 12px;color:#718792}
+    .nav-list{display:grid;gap:6px}
+    .nav-btn{
+      width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:12px;
+      color:var(--muted);border:1px solid transparent;border-radius:11px;background:transparent;
+      font-size:13px;transition:.2s
+    }
+    .nav-btn .nav-icon{width:22px;text-align:center;font-size:17px}
+    .nav-btn:hover{color:var(--text);background:#ffffff08}
+    .nav-btn.active{color:var(--green);border-color:#43f0a52e;background:linear-gradient(100deg,#43f0a51b,#45d9f508);box-shadow:inset 3px 0 var(--green)}
+    .side-foot{margin-top:18px;padding:13px 10px 5px;border-top:1px solid var(--line-soft);font-size:10px;color:#718792;line-height:1.7}
+    main{min-width:0;max-width:1050px;width:100%;margin:auto}
+    .page{animation:pageIn .38s cubic-bezier(.2,.75,.25,1) both}
+    @keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .page-head{margin:5px 0 22px}
+    h1{font-size:clamp(28px,4vw,43px);line-height:1.08;letter-spacing:-1.5px;margin:9px 0 10px}
+    h2{font-size:16px;margin:0 0 13px;letter-spacing:.1px}
+    h3{font-size:13px;margin:0}
+    p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+    .hero{
+      position:relative;isolation:isolate;overflow:hidden;padding:clamp(22px,4vw,38px);
+      border:1px solid #43f0a54a;border-radius:22px;
+      background:linear-gradient(120deg,#102a22f2 0%,#101e27f5 54%,#102330f2 100%);
+      box-shadow:var(--shadow)
+    }
+    .hero:before{content:"";position:absolute;z-index:-1;width:330px;height:330px;right:-100px;top:-170px;border:1px solid #45d9f533;border-radius:50%;box-shadow:0 0 0 28px #45d9f508,0 0 0 58px #45d9f506}
+    .hero:after{content:"ALSF";position:absolute;right:20px;bottom:-35px;z-index:-1;font-size:clamp(80px,15vw,170px);font-weight:1000;letter-spacing:-12px;color:#ffffff06;pointer-events:none}
+    .hero-copy{max-width:620px}
+    .hero .intro{max-width:510px;margin-bottom:20px;font-size:14px}
+    .eyebrow .slash{color:var(--cyan);padding:0 5px}
+    .tag{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #43f0a540;border-radius:7px;background:#43f0a510;color:#9af3c8;font-size:9px;font-weight:850;letter-spacing:1.4px}
+    .tag:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--green)}
+    .section-label{margin:27px 0 12px;color:#82969f;font-size:10px;letter-spacing:2px;font-weight:850;text-transform:uppercase}
+    .dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .module-card,.panel,.stat-card{
+      border:1px solid var(--line);border-radius:var(--radius);
+      background:linear-gradient(145deg,#13222c,#0d161e 78%);
+      box-shadow:0 10px 30px #0002
+    }
+    .module-card{
+      min-height:140px;padding:18px;text-align:left;color:var(--text);
+      transition:transform .22s,border-color .22s,box-shadow .22s;position:relative;overflow:hidden
+    }
+    .module-card:after{content:"";position:absolute;width:90px;height:90px;right:-45px;bottom:-45px;border:1px solid #45d9f522;border-radius:50%;transition:transform .3s}
+    .module-card:hover{transform:translateY(-4px);border-color:#43f0a577;box-shadow:0 16px 34px #0005,0 0 25px #43f0a50c}
+    .module-card:hover:after{transform:scale(1.5)}
+    .module-icon{font-size:24px;margin-bottom:15px}
+    .module-title{font-size:14px;font-weight:850}
+    .module-desc{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.5}
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+    .stat-card{padding:15px}
+    .stat-value{font-size:25px;font-weight:900;letter-spacing:-1px;color:var(--green)}
+    .stat-label{font-size:9px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-top:5px}
+    .panel{padding:19px;margin-top:14px}
+    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .panel-head h2{margin:0}
+    .panel-note{font-size:10px;color:var(--muted)}
+    .field{display:flex;flex-direction:column;gap:7px;margin:11px 0}
+    .field label{font-size:10px;color:#9aadb5;letter-spacing:1.1px;font-weight:800}
+    .field input,.field select{
+      width:100%;min-height:43px;padding:11px 12px;border:1px solid var(--line);
+      border-radius:10px;background:#091119;color:var(--text);outline:none
+    }
+    .field input:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px #43f0a512}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .primary-btn{margin-top:8px}
+    .secondary-btn{border-color:var(--line);background:#172630;color:#c5d6dc}
+    .danger-btn{border-color:#ff777e55;background:#ff777e12;color:#ff9ba0}
+    .member{
+      display:flex;align-items:center;gap:12px;padding:13px;margin-top:9px;
+      border:1px solid var(--line-soft);border-radius:12px;background:#0a141c;
+      animation:memberIn .25s ease both
+    }
+    @keyframes memberIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+    .member-info{flex:1;min-width:0}
+    .member-name{font-weight:800;overflow-wrap:anywhere;font-size:13px}
+    .member-rank{font-size:10px;color:var(--muted);margin-top:4px}
+    .rank{display:inline-flex;align-items:center;padding:7px 9px;border:1px solid #43f0a544;border-radius:7px;background:#43f0a512;color:var(--green);font-size:10px;font-weight:900;letter-spacing:.7px;white-space:nowrap}
+    .rank.alpha{background:#e8c36c12;color:var(--gold);border-color:#e8c36c55}
+    .rank.beta{background:#bd8aff12;color:#c99aff;border-color:#bd8aff55}
+    .rank.gamma{background:#45d9f512;color:var(--cyan);border-color:#45d9f555}
+    .rank.delta{background:#43f0a512;color:var(--green);border-color:#43f0a555}
+    .member-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .small-action{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#14232d;color:#b8cbd2;font-size:10px}
+    .small-action:hover{border-color:var(--cyan);color:var(--cyan)}
+    .empty{padding:20px;text-align:center;color:#718792;font-size:12px;border:1px dashed var(--line);border-radius:12px;margin-top:10px}
+    .rank-heading{margin:20px 0 8px;color:var(--green);font-size:11px;font-weight:900;letter-spacing:1.5px}
+    .hidden{display:none!important}
+    .notice{padding:13px;border:1px solid #45d9f533;border-radius:11px;background:#45d9f50b;color:#a8dce6;font-size:11px;line-height:1.6}
+    .modal-backdrop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:#000b;backdrop-filter:blur(8px)}
+    .modal{width:min(100%,430px);padding:22px;border:1px solid var(--line);border-radius:18px;background:#101c25;box-shadow:var(--shadow)}
+    .modal h2{margin:10px 0}
+    .modal-actions{display:flex;justify-content:flex-end;margin-top:18px}
+    .mobile-nav{display:none}
+    @media(max-width:850px){
+      .layout{grid-template-columns:1fr;gap:16px;padding-top:18px}
+      .sidebar{position:static;padding:8px}
+      .side-label,.side-foot{display:none}
+      .nav-list{display:flex;overflow-x:auto;gap:5px}
+      .nav-btn{width:auto;flex:none;padding:10px 12px}
+      .nav-btn .nav-icon{width:auto}
+      main{max-width:none}
+    }
+    @media(max-width:560px){
+      .topbar{padding:10px 14px}
+      .brand-logo{width:38px;height:38px}
+      .brand-name{font-size:13px}
+      .brand-sub{font-size:8px}
+      .system-state{display:none}
+      .layout{padding:13px 13px 30px}
+      .dashboard-grid{grid-template-columns:1fr}
+      .stats{gap:7px}
+      .stat-card{padding:11px}
+      .stat-value{font-size:21px}
+      .stat-label{font-size:8px}
+      .panel{padding:14px}
+      .form-grid{grid-template-columns:1fr}
+      .member{align-items:flex-start;flex-wrap:wrap}
+      .member-actions{width:100%;padding-left:0}
+      .rank{margin-left:auto}
+      .nav-btn{font-size:11px;padding:9px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+    }
+  </style>
 </head>
+
 <body>
-
-  <!-- IDENTIFICATION -->
-  <div id="authModal" class="modal-overlay hidden">
-    <div class="modal-box">
-      <div class="section-header"><small>ALSF // ACCÈS</small><h1>Profil Opérateur</h1></div>
-      <label>Pseudo</label>
-      <input type="text" id="authPseudo" placeholder="Ex: Ghost_01" />
-      <label>Catégorie ALSF</label>
-      <select id="authCategory">
-        <option value="DELTA">DELTA (Base)</option>
-        <option value="GAMMA">GAMMA</option>
-        <option value="BETA">BÊTA</option>
-        <option value="ALPHA">ALPHA (Commandement)</option>
-      </select>
-      <label>Numéro du grade (1 = plus élevé)</label>
-      <input type="number" id="authRank" min="1" value="1" />
-      <label>Code d'invitation (vide si premier membre)</label>
-      <input type="text" id="authInvite" placeholder="Code d'invitation" />
-      <div id="authError" class="err-txt"></div>
-      <button class="btn full-w" onclick="registerOrLogin()">Activer mon profil</button>
-    </div>
-  </div>
-
-  <!-- EN-TÊTE -->
-  <header>
+<div class="app-shell">
+  <header class="topbar">
     <div class="brand">
-      <img src="icon.svg" alt="ALSF" />
-      <div><div class="brand-title">ALSF</div><div class="brand-sub">Centre de Commandement</div></div>
+      <div class="brand-logo">
+        <img src="./icon.svg" alt="ALSF" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <span class="brand-fallback" style="display:none">ALSF</span>
+      </div>
+      <div>
+        <div class="brand-name">ALSF</div>
+        <div class="brand-sub">CENTRE DE COMMANDEMENT</div>
+      </div>
     </div>
-    <div class="status-bar">
-      <span id="currentUserBadge">Non connecté</span>
-      <div class="badge-status"><span class="dot-pulse" id="netDot"></span><span id="netStatusText">SYNC...</span></div>
+    <div class="top-actions">
+      <div class="system-state"><span class="pulse"></span>SYSTÈME ACTIF</div>
+      <button id="installButton" class="install-btn hidden" type="button">Installer ALSF</button>
     </div>
   </header>
 
-  <!-- NAVIGATION -->
-  <nav>
-    <button class="active" onclick="switchTab('dashboard', this)">⌂ QG</button>
-    <button onclick="switchTab('mapTab', this)">⌖ Carte</button>
-    <button onclick="switchTab('commsTab', this)">▤ Chat</button>
-    <button onclick="switchTab('rosterTab', this)">♙ Effectifs</button>
-    <button onclick="switchTab('adminTab', this)">⚙ Admin</button>
-    <button onclick="switchTab('helpTab', this)">? Aide</button>
-  </nav>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-label">NAVIGATION PRINCIPALE</div>
+      <nav class="nav-list">
+        <button class="nav-btn active" data-page="home" onclick="showPage('home')"><span class="nav-icon">⌂</span>Tableau de bord</button>
+        <button class="nav-btn" data-page="map" onclick="showPage('map')"><span class="nav-icon">⌖</span>Carte</button>
+        <button class="nav-btn" data-page="chat" onclick="showPage('chat')"><span class="nav-icon">▤</span>Communications</button>
+        <button class="nav-btn" data-page="members" onclick="showPage('members')"><span class="nav-icon">♙</span>Effectifs</button>
+        <button class="nav-btn" data-page="admin" onclick="showPage('admin')"><span class="nav-icon">⚙</span>Administration</button>
+      </nav>
+      <div class="side-foot">ALSF // ACCÈS INTERNE<br>INTERFACE DE COMMANDEMENT</div>
+    </aside>
 
-  <main>
-    <!-- 1. TABLEAU DE BORD -->
-    <section id="dashboard" class="tab-section active">
-      <div class="section-header"><small>ALSF // QG NUMÉRIQUE</small><h1>Tableau de bord</h1></div>
-      <div class="grid-stats">
-        <div class="card"><div class="stat-val" id="statTotal">0</div><div class="stat-label">Membres</div></div>
-        <div class="card"><div class="stat-val" id="statAlpha">0</div><div class="stat-label">ALPHA</div></div>
-        <div class="card"><div class="stat-val" id="statOnline">0</div><div class="stat-label">GPS Actifs</div></div>
-        <div class="card"><div class="stat-val" id="statMsgs">0</div><div class="stat-label">Messages</div></div>
-      </div>
-      <div class="grid-2">
-        <div class="card">
-          <h2>Mon Profil</h2>
-          <div id="profileSummary" class="box-inner">Chargement...</div>
-          <button class="btn btn-cyan btn-sm" onclick="openAuthModal()">Changer / Créer profil</button>
+    <main>
+      <section id="home" class="page">
+        <div class="page-head">
+          <div class="eyebrow">ALSF <span class="slash">/</span> QG NUMÉRIQUE</div>
+          <h1>Centre de commandement</h1>
+          <p>Bienvenue dans l'interface centrale de l'Alliance.</p>
         </div>
-        <div class="card">
-          <h2>Transfert de compte (10 min)</h2>
-          <button class="btn btn-sm" onclick="generateTransferLink()">Générer lien temporaire</button>
-          <input type="text" id="transferOutput" readonly placeholder="Lien de transfert..." onclick="this.select()" />
-        </div>
-      </div>
-    </section>
 
-    <!-- 2. CARTE & GPS -->
-    <section id="mapTab" class="tab-section">
-      <div class="section-header"><small>ALSF // RADAR</small><h1>Carte & Géolocalisation</h1></div>
-      <div class="card">
-        <h2>Mode de position</h2>
-        <div class="mode-selector">
-          <button class="mode-btn active" id="modeBtn-gps" onclick="setLocationMode('gps')">1. Auto (GPS)</button>
-          <button class="mode-btn" id="modeBtn-wifi" onclick="setLocationMode('wifi')">2. Wi-Fi / Réseau</button>
-          <button class="mode-btn" id="modeBtn-manual" onclick="setLocationMode('manual')">3. Manuel (Clic)</button>
-        </div>
-        <div id="geoStatusInfo" class="info-cyan">Mode prêt.</div>
-        <div class="switch-row">
-          <span><strong>Partager ma position</strong> aux membres</span>
-          <input type="checkbox" id="shareLocationToggle" class="tactical-toggle" checked onchange="syncMyLocation()" />
-        </div>
-        <div class="switch-row">
-          <span><strong>Screen Wake Lock</strong> (écran toujours allumé)</span>
-          <input type="checkbox" id="wakeLockToggle" class="tactical-toggle" onchange="toggleWakeLock(this.checked)" />
-        </div>
-      </div>
-      <div class="card pad-sm"><div id="map"></div></div>
-    </section>
-
-    <!-- 3. COMMUNICATIONS -->
-    <section id="commsTab" class="tab-section">
-      <div class="section-header"><small>ALSF // RÉSEAU</small><h1>Messagerie</h1></div>
-      <div class="card">
-        <div class="row-gap">
-          <select id="chatChannel" onchange="loadMessages()">
-            <option value="general"># Général ALSF</option>
-            <option value="command"># Commandement</option>
-            <option value="operations"># Opérations</option>
-          </select>
-          <input type="text" id="privateTarget" placeholder="Ou pseudo pour message privé..." onchange="loadMessages()" />
-        </div>
-        <div id="chatBox" class="chat-box"></div>
-        <form onsubmit="sendMessage(event)" class="row-gap">
-          <input type="text" id="chatInput" placeholder="Écrire un message..." required autocomplete="off" />
-          <button type="submit" class="btn">Envoyer</button>
-        </form>
-      </div>
-    </section>
-
-    <!-- 4. EFFECTIFS -->
-    <section id="rosterTab" class="tab-section">
-      <div class="section-header"><small>ALSF // HIÉRARCHIE</small><h1>Classement & Effectifs</h1></div>
-      <div class="grid-2">
-        <div class="card">
-          <h2>Ajouter un membre</h2>
-          <label>Pseudo</label><input type="text" id="newMemberPseudo" placeholder="Pseudo" />
-          <label>Catégorie</label>
-          <select id="newMemberCat">
-            <option value="ALPHA">ALPHA</option><option value="BETA">BÊTA</option>
-            <option value="GAMMA">GAMMA</option><option value="DELTA" selected>DELTA</option>
-          </select>
-          <label>Numéro du grade</label><input type="number" id="newMemberRank" min="1" value="1" />
-          <div id="rosterFeedback" class="err-txt"></div>
-          <button class="btn full-w" onclick="addMember()">+ Enregistrer le grade</button>
-        </div>
-        <div class="card">
-          <h2>Classement Officiel</h2>
-          <div id="rosterList">Chargement...</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. ADMINISTRATION -->
-    <section id="adminTab" class="tab-section">
-      <div class="section-header"><small>ALSF // CONTRÔLE</small><h1>Administration</h1></div>
-      <div class="grid-2">
-        <div class="card">
-          <h2>Codes d'invitation</h2>
-          <button class="btn btn-cyan" onclick="generateInviteCode()">Générer un code</button>
-          <div id="invitesList" class="mt-1"></div>
-        </div>
-        <div class="card">
-          <h2>Gestion des membres</h2>
-          <div id="adminMembersList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. AIDE INTERACTIVE -->
-    <section id="helpTab" class="tab-section">
-      <div class="section-header"><small>ALSF // MANUEL</small><h1>Briefing interactif</h1></div>
-      <div class="card slide-container">
-        <div class="briefing-slide active">
-          <div class="anim-stage"><div class="radar-circle"><span>GPS</span></div></div>
-          <h2>1. Les 3 Modes de Position</h2>
-          <p><strong>Auto (GPS)</strong> : suivi précis. <strong>Wi-Fi</strong> : contourne les blocages Chrome. <strong>Manuel</strong> : clique sur la carte.</p>
-        </div>
-        <div class="briefing-slide">
-          <div class="anim-stage"><div class="sync-nodes"><div class="node-box">MOBILE</div><div class="data-packet"></div><div class="node-box">QG</div></div></div>
-          <h2>2. Screen Wake Lock & Batterie</h2>
-          <p>Active <strong>Screen Wake Lock</strong> sur la carte pour garder l'écran allumé. Sur Android, mets la batterie du navigateur en <em>Non restreinte</em>.</p>
-        </div>
-        <div class="briefing-slide">
-          <div class="anim-stage"><div class="install-badge">+ ÉCRAN D'ACCUEIL</div></div>
-          <h2>3. Installer l'Application (PWA)</h2>
-          <p><strong>Android</strong> : Menu ⋮ > Installer. <strong>iPhone</strong> : Partager ⬆ > Sur l'écran d'accueil.</p>
-        </div>
-        <div class="briefing-slide">
-          <div class="anim-stage">
-            <div class="row-gap"><span class="rank-badge rank-ALPHA">ALPHA 1</span><span class="rank-badge rank-BETA">BÊTA 1</span><span class="rank-badge rank-GAMMA">GAMMA 1</span><span class="rank-badge rank-DELTA">DELTA 1</span></div>
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="tag">QUARTIER GÉNÉRAL EN LIGNE</span>
+            <h1>Une Alliance.<br>Une seule direction.</h1>
+            <p class="intro">Retrouve les informations essentielles, consulte les effectifs et accède aux différents modules de l'ALSF depuis un seul espace.</p>
+            <button class="primary-btn" onclick="showPage('members')">Consulter les effectifs ↗</button>
           </div>
-          <h2>4. Hiérarchie ALSF</h2>
-          <p><strong>ALPHA 1</strong> est le chef. Le numéro 1 est le plus élevé dans sa catégorie. Chaque rang exact est unique.</p>
         </div>
-        <div class="carousel-controls">
-          <button class="btn btn-cyan btn-sm" onclick="changeSlide(-1)">← Précédent</button>
-          <div class="dots" id="slideDots"></div>
+
+        <div class="section-label">APERÇU DES EFFECTIFS</div>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-value" id="totalMembers">0</div><div class="stat-label">Membres enregistrés</div></div>
+          <div class="stat-card"><div class="stat-value" id="alphaMembers">0</div><div class="stat-label">Membres ALPHA</div></div>
+          <div class="stat-card"><div class="stat-value" id="deltaMembers">0</div><div class="stat-label">Membres DELTA</div></div>
+        </div>
+
+        <div class="section-label">MODULES DISPONIBLES</div>
+        <div class="dashboard-grid">
+          <button class="module-card" onclick="showPage('map')"><div class="module-icon">⌖</div><div class="module-title">Carte stratégique</div><div class="module-desc">Espace réservé à la future carte des opérations.</div></button>
+          <button class="module-card" onclick="showPage('chat')"><div class="module-icon">▤</div><div class="module-title">Communications</div><div class="module-desc">Espace réservé aux futures communications internes.</div></button>
+          <button class="module-card" onclick="showPage('members')"><div class="module-icon">♙</div><div class="module-title">Gestion des effectifs</div><div class="module-desc">Consulter et gérer les grades des membres.</div></button>
+          <button class="module-card" onclick="showPage('admin')"><div class="module-icon">⚙</div><div class="module-title">Administration</div><div class="module-desc">Informations et paramètres de l'interface.</div></button>
+        </div>
+      </section>
+
+      <section id="map" class="page hidden">
+        <div class="page-head">
+          <div class="eyebrow">ALSF <span class="slash">/</span> GÉOGRAPHIE</div>
+          <h1>Carte stratégique</h1>
+          <p>Centre de visualisation géographique.</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Module cartographique</h2><span class="panel-note">EN PRÉPARATION</span></div>
+          <div class="notice">La carte stratégique sera intégrée dans une prochaine version. Aucun emplacement ni aucune donnée opérationnelle n'est encore enregistré ici.</div>
+        </div>
+      </section>
+
+      <section id="chat" class="page hidden">
+        <div class="page-head">
+          <div class="eyebrow">ALSF <span class="slash">/</span> RÉSEAU</div>
+          <h1>Communications</h1>
+          <p>Centre de communication interne.</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Réseau de communication</h2><span class="panel-note">EN PRÉPARATION</span></div>
+          <div class="notice">Le système de messagerie n'est pas encore connecté. Une base de données et un service serveur seront nécessaires pour permettre aux membres de communiquer entre différents appareils.</div>
+        </div>
+      </section>
+
+      <section id="members" class="page hidden">
+        <div class="page-head">
+          <div class="eyebrow">ALSF <span class="slash">/</span> PERSONNEL</div>
+          <h1>Gestion des effectifs</h1>
+          <p>Annuaire interne et organisation hiérarchique de l'Alliance.</p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Ajouter un membre</h2><span class="panel-note">NOUVELLE INSCRIPTION</span></div>
+          <div class="field">
+            <label for="memberName">PSEUDO DU MEMBRE</label>
+            <input id="memberName" type="text" maxlength="40" placeholder="Nom ou pseudonyme">
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="memberCategory">CATÉGORIE</label>
+              <select id="memberCategory">
+                <option value="ALPHA">ALPHA</option>
+                <option value="BETA">BÊTA</option>
+                <option value="GAMMA">GAMMA</option>
+                <option value="DELTA">DELTA</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="memberNumber">NUMÉRO DU GRADE</label>
+              <input id="memberNumber" type="number" min="1" step="1" placeholder="Ex : 1">
+            </div>
+          </div>
+          <button class="primary-btn" onclick="addMember()">+ Ajouter le membre</button>
+          <p id="formMessage" role="status" aria-live="polite" style="margin-top:12px"></p>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Annuaire des membres</h2><span class="panel-note" id="directoryCount">0 membre</span></div>
+          <div id="memberList"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h2>Hiérarchie ALSF</h2><span class="panel-note">DU PLUS ÉLEVÉ AU PLUS BAS</span></div>
+          <div id="rankList"></div>
+        </div>
+      </section>
+
+      <section id="admin" class="page hidden">
+        <div class="page-head">
+          <div class="eyebrow">ALSF <span class="slash">/</span> CONTRÔLE</div>
+          <h1>Administration</h1>
+          <p>Informations techniques et paramètres de l'interface.</p>
+        </div>
+        <div class="panel">
+          <h2>État de l'application</h2>
+          <div class="notice">Interface ALSF active. Les données des effectifs sont actuellement enregistrées dans le stockage local de ce navigateur.</div>
+        </div>
+        <div class="panel">
+          <h2>Hiérarchie actuelle</h2>
+          <p>ALPHA est la catégorie la plus élevée, suivie de BÊTA, GAMMA et DELTA. Dans chaque catégorie, le numéro 1 est le rang le plus élevé. Chaque rang précis ne peut être occupé que par un seul membre.</p>
+        </div>
+        <div class="panel">
+          <h2>Stockage des données</h2>
+          <p>Cette version utilise le stockage local du navigateur. Les données ne sont donc pas automatiquement partagées entre plusieurs appareils ou plusieurs utilisateurs. Une future synchronisation nécessitera un serveur ou une base de données.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div id="installHelp" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="installHelpTitle">
+  <div class="modal">
+    <div class="eyebrow">INSTALLATION ALSF</div>
+    <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
+    <p id="installHelpText">Ouvre le menu de ton navigateur puis choisis « Ajouter à l'écran d'accueil » ou « Installer l'application ».</p>
+    <div class="modal-actions"><button class="secondary-btn" onclick="closeInstallHelp()">Fermer</button></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "alsf_members_v1";
+const CATEGORY_ORDER = ["ALPHA", "BETA", "GAMMA", "DELTA"];
+const CATEGORY_LABELS = { ALPHA:"ALPHA", BETA:"BÊTA", GAMMA:"GAMMA", DELTA:"DELTA" };
+
+let members = loadMembers();
+let deferredInstallPrompt = null;
+
+function loadMembers() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved.filter(isValidMember) : [];
+  } catch (error) {
+    console.error("Lecture des membres impossible :", error);
+    return [];
+  }
+}
+
+function isValidMember(member) {
+  return member && typeof member.name === "string" &&
+    CATEGORY_ORDER.includes(member.category) &&
+    Number.isInteger(Number(member.number)) && Number(member.number) > 0;
+}
+
+function saveMembers() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
+    return true;
+  } catch (error) {
+    console.error("Sauvegarde impossible :", error);
+    showMessage("La sauvegarde locale a échoué. Vérifie l'espace disponible du navigateur.", "error");
+    return false;
+  }
+}
+
+function showPage(page) {
+  const selected = document.getElementById(page);
+  if (!selected) return;
+
+  document.querySelectorAll("main > section").forEach(section => section.classList.add("hidden"));
+  selected.classList.remove("hidden");
+  selected.style.animation = "none";
+  void selected.offsetWidth;
+  selected.style.animation = "";
+
+  document.querySelectorAll("[data-page]").forEach(button => {
+    button.classList.toggle("active", button.dataset.page === page);
+  });
+
+  window.scrollTo({top:0, behavior:"smooth"});
+
+  if (page === "members") renderMembers();
+  if (page === "home") renderStats();
+}
+
+function getRankNumber(member) {
+  return Number(member.number);
+}
+
+function compareMembers(a, b) {
+  const categoryDifference = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+  return categoryDifference || getRankNumber(a) - getRankNumber(b);
+}
+
+function rankClass(category) {
+  return category.toLowerCase();
+}
+
+function formatRank(member) {
+  return CATEGORY_LABELS[member.category] + " " + member.number;
+}
+
+function renderStats() {
+  document.getElementById("totalMembers").textContent = members.length;
+  document.getElementById("alphaMembers").textContent = members.filter(m => m.category === "ALPHA").length;
+  document.getElementById("deltaMembers").textContent = members.filter(m => m.category === "DELTA").length;
+}
+
+function renderMembers() {
+  const sorted = [...members].sort(compareMembers);
+  const list = document.getElementById("memberList");
+  const rankList = document.getElementById("rankList");
+
+  document.getElementById("directoryCount").textContent = `${sorted.length} membre${sorted.length > 1 ? "s" : ""}`;
+
+  if (!sorted.length) {
+    list.innerHTML = '<div class="empty">Aucun membre enregistré pour le moment.</div>';
+  } else {
+    list.innerHTML = sorted.map(member => `
+      <div class="member">
+        <div class="member-info">
+          <div class="member-name">${escapeHTML(member.name)}</div>
+          <div class="member-rank">Membre de l'Alliance</div>
+        </div>
+        <span class="rank ${rankClass(member.category)}">${formatRank(member)}</span>
+        <div class="member-actions">
+          <button class="small-action" onclick="editMember('${escapeAttribute(member.id)}')">Modifier</button>
+          <button class="small-action" onclick="deleteMember('${escapeAttribute(member.id)}')">Supprimer</button>
+        </div>
+      </div>`).join("");
+  }
+
+  rankList.innerHTML = CATEGORY_ORDER.map(category => {
+    const group = sorted.filter(member => member.category === category);
+
+    return `<div class="rank-heading">${CATEGORY_LABELS[category]}</div>` +
+      (group.length ? group.map(member => `
+        <div class="member">
+          <div class="member-info"><div class="member-name">${escapeHTML(member.name)}</div></div>
+          <span class="rank ${rankClass(category)}">${formatRank(member)}</span>
+        </div>`).join("") : '<div class="empty">Aucun membre dans cette catégorie.</div>');
+  }).join("");
+
+  renderStats();
+}
+
+function addMember() {
+  const nameInput = document.getElementById("memberName");
+  const category = document.getElementById("memberCategory").value;
+  const number = Number(document.getElementById("memberNumber").value);
+  const name = nameInput.value.trim();
+
+  if (!name) return showMessage("Entre un pseudo pour le membre.", "error");
+
+  if (!Number.isSafeInteger(number) || number < 1)
+    return showMessage("Le numéro doit être un entier supérieur ou égal à 1.", "error");
+
+  if (members.some(member => member.category === category && Number(member.number) === number))
+    return showMessage("Ce rang est déjà occupé par un autre membre.", "error");
+
+  members.push({id:makeId(), name, category, number});
+
+  if (!saveMembers()) {
+    members.pop();
+    return;
+  }
+
+  nameInput.value = "";
+  document.getElementById("memberNumber").value = "";
+
+  showMessage("Membre ajouté au classement ALSF.", "success");
+  renderMembers();
+}
+
+function editMember(id) {
+  const member = members.find(item => item.id === id);
+  if (!member) return;
+
+  const newName = prompt("Nouveau pseudo :", member.name);
+  if (newName === null) return;
+  if (!newName.trim()) return alert("Le pseudo ne peut pas être vide.");
+
+  const newRank = prompt("Nouveau grade (ex : ALPHA 1, BÊTA 2, GAMMA 3, DELTA 4) :", formatRank(member));
+  if (newRank === null) return;
+
+  const match = newRank.trim().toUpperCase().match(/^(ALPHA|BETA|BÊTA|GAMMA|DELTA)\s+([1-9]\d*)$/);
+  if (!match) return alert("Format invalide. Exemple : DELTA 2.");
+
+  const category = match[1] === "BÊTA" ? "BETA" : match[1];
+  const number = Number(match[2]);
+
+  if (!Number.isSafeInteger(number)) return alert("Numéro trop élevé.");
+
+  if (members.some(item => item.id !== id && item.category === category && Number(item.number) === number))
+    return alert("Ce rang est déjà occupé.");
+
+  const old = {...member};
+
+  member.name = newName.trim();
+  member.category = category;
+  member.number = number;
+
+  if (!saveMembers()) Object.assign(member, old);
+
+  renderMembers();
+}
+
+function deleteMember(id) {
+  const member = members.find(item => item.id === id);
+
+  if (!member || !confirm("Supprimer " + member.name + " du classement ?")) return;
+
+  const oldMembers = members;
+  members = members.filter(item => item.id !== id);
+
+  if (!saveMembers()) {
+    members = oldMembers;
+    return;
+  }
+
+  renderMembers();
+}
+
+function showMessage(message, type) {
+  const target = document.getElementById("formMessage");
+  target.textContent = message;
+  target.style.color = type === "success" ? "var(--green)" : "var(--red)";
+}
+
+function makeId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+  }[char]));
+}
+
+function escapeAttribute(value) {
+  return escapeHTML(value).replace(/`/g, "&#096;");
+}
+
+const installButton = document.getElementById("installButton");
+
+installButton.addEventListener("click", async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installButton.classList.add("hidden");
+  } else {
+    showInstallHelp();
+  }
+});
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  installButton.classList.remove("hidden");
+});
+
+window.addEventListener("appinstalled", () => {
+  installButton.classList.add("hidden");
+  deferredInstallPrompt = null;
+});
+
+// Safari sur iPhone/iPad ne déclenche pas beforeinstallprompt.
+const isAppleMobile = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+if (isAppleMobile && !isStandalone) installButton.classList.remove("hidden");
+if (isStandalone) installButton.classList.add("hidden");
+
+function showInstallHelp() {
+  const text = document.getElementById("installHelpText");
+  const ua = navigator.userAgent;
+
+  if (/iphone|ipad|ipod/i.test(ua)) {
+    text.textContent = "Dans Safari : touche le bouton Partager, puis « Sur l’écran d’accueil » et confirme avec « Ajouter ». Si tu utilises un autre navigateur, ouvre cette page dans Safari.";
+  } else if (/android/i.test(ua)) {
+    text.textContent = "Dans Chrome : ouvre le menu ⋮ puis choisis « Installer l'application » ou « Ajouter à l'écran d'accueil », selon la version du navigateur.";
+  } else {
+    text.textContent = "Dans Chrome ou Edge : ouvre le menu du navigateur puis choisis « Installer ALSF » ou « Installer cette application ». Tu peux ensuite l'épingler à la barre des tâches.";
+  }
+
+  document.getElementById("installHelp").classList.remove("hidden");
+}
+
+function closeInstallHelp() {
+  document.getElementById("installHelp").classList.add("hidden");
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
+      .then(registration => registration.update())
+      .catch(error => console.error("Service Worker :", error));
+  });
+}
+
+renderMembers();
+</script>
+</body>
+</html>
