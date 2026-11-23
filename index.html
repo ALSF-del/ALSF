@@ -1,637 +1,691 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080d12">
-<title>LSF | Centre de commandement</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="description" content="ALSF - Centre de commandement">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<title>ALSF | Centre de commandement</title>
 <style>
 :root {
-  color-scheme:dark;
   --bg:#080d12;
-  --panel:#101b24;
-  --panel2:#14232d;
-  --line:#263b47;
-  --green:#43f0a5;
-  --cyan:#45d9f5;
-  --text:#eaf4f7;
-  --muted:#8ca0aa;
-  --red:#ff777e;
+  --panel:#101922;
+  --panel2:#14212c;
+  --green:#35e69a;
+  --blue:#39c9ed;
+  --text:#e8f1f5;
+  --muted:#80929d;
+  --border:#233541;
 }
 *{box-sizing:border-box}
 body{
-  margin:0;background:
-  radial-gradient(ellipse at 10% 0%,#164d3a55,transparent 40%),
-  linear-gradient(180deg,#080e14,#070c11);
-  color:var(--text);font-family:Inter,Arial,sans-serif;min-height:100vh
+  margin:0;
+  background:radial-gradient(ellipse at 50% -20%,#12352d 0%,transparent 55%),var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+  min-height:100vh;
 }
-button,input,textarea,select{font:inherit}
+button,input,select{font:inherit}
 button{cursor:pointer}
-header{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:17px 25px;border-bottom:1px solid var(--line);
-  background:#080e14e8;position:sticky;top:0;z-index:5;
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:17px 20px;border-bottom:1px solid var(--border);
+  background:#080d12ef;position:sticky;top:0;z-index:5;
   backdrop-filter:blur(15px)
 }
-.logo{font-size:22px;font-weight:950;letter-spacing:5px;color:var(--green)}
-.logo small{display:block;font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px}
-.status{font-size:10px;color:var(--green);letter-spacing:1px}
-main{max-width:1050px;margin:auto;padding:35px 20px 70px}
-h1{font-size:clamp(28px,5vw,43px);margin:10px 0}
-h2{font-size:18px;margin-top:0}
-p{color:var(--muted);font-size:13px;line-height:1.7}
-.eyebrow{color:var(--green);font-size:10px;letter-spacing:2px;font-weight:bold}
-.panel{
-  background:linear-gradient(145deg,#13222c,#0d161e);
-  border:1px solid var(--line);border-radius:17px;
-  padding:22px;margin:15px 0
+.brand{display:flex;align-items:center;gap:11px}
+.logo{
+  width:43px;height:43px;border:1px solid #35e69a70;
+  border-radius:12px;background:#12342b;display:grid;
+  place-items:center;color:var(--green);font-weight:900;
+  letter-spacing:-1px;font-size:12px
 }
-.field{display:grid;gap:7px;margin:15px 0}
-label{font-size:10px;color:#a7bac2;font-weight:bold;letter-spacing:1px}
-input,textarea,select{
-  width:100%;padding:13px;border-radius:10px;
-  border:1px solid var(--line);background:#091119;
-  color:var(--text);outline:none
+.brand-name{font-weight:900;letter-spacing:3px}
+.brand-sub{color:var(--muted);font-size:9px;letter-spacing:2px;margin-top:4px}
+.status{color:var(--green);font-size:10px;letter-spacing:1px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px}
+main{max-width:1050px;margin:auto;padding:25px 18px 110px}
+.eyebrow{color:var(--green);font-size:10px;letter-spacing:3px;font-weight:bold}
+h1{font-size:clamp(26px,5vw,42px);margin:10px 0}
+h2{font-size:18px;margin:0 0 14px}
+.intro{color:var(--muted);line-height:1.6;font-size:14px}
+.hero{
+  border:1px solid #35e69a40;border-radius:18px;padding:24px;
+  background:linear-gradient(135deg,#11251f,#101922 70%);
+  position:relative;overflow:hidden
 }
-textarea{min-height:140px;resize:vertical}
-input:focus,textarea:focus,select:focus{border-color:var(--green)}
-button.action{
-  border:1px solid #43f0a566;border-radius:10px;
-  padding:12px 16px;background:#43f0a51a;
-  color:var(--green);font-weight:bold
+.hero:after{
+  content:"ALSF";position:absolute;right:5px;bottom:-24px;
+  font-size:100px;font-weight:900;color:#ffffff08;
+  letter-spacing:-8px;pointer-events:none
 }
-button.action:hover{background:#43f0a533}
-button.secondary{border-color:var(--line);color:var(--text);background:#172630}
-button.danger{border-color:#ff777e66;color:#ff9ba0;background:#ff777e12}
-button:disabled{opacity:.5;cursor:not-allowed}
-.message{margin-top:12px;font-size:12px;line-height:1.6}
-.success{color:var(--green)}
-.error{color:var(--red)}
-.muted{color:var(--muted)}
-.hidden{display:none!important}
-.navigation{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px}
-.navigation button{
-  border:1px solid var(--line);border-radius:9px;
-  background:var(--panel);color:var(--muted);padding:10px 13px
+.hero-content{position:relative;z-index:1}
+.section-title{
+  margin:27px 0 13px;font-size:12px;letter-spacing:2px;
+  color:var(--muted);text-transform:uppercase
 }
-.navigation button.active{border-color:var(--green);color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .card{
-  border:1px solid var(--line);background:#0b151d;
-  border-radius:12px;padding:16px;margin-top:10px
+  background:linear-gradient(145deg,var(--panel2),var(--panel));
+  border:1px solid var(--border);border-radius:15px;padding:18px;
+  min-height:130px;text-align:left;color:var(--text);transition:.2s
 }
-.card-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.card:hover{border-color:var(--green);transform:translateY(-2px)}
+.card-icon{font-size:25px;margin-bottom:15px}
+.card-title{font-weight:bold;font-size:14px}
+.card-desc{color:var(--muted);font-size:11px;margin-top:7px;line-height:1.5}
+.panel{
+  border:1px solid var(--border);background:var(--panel);
+  border-radius:15px;padding:19px;margin-top:14px
+}
+.panel p{color:var(--muted);font-size:13px;line-height:1.6}
 .tag{
-  display:inline-block;padding:6px 9px;border-radius:7px;
-  border:1px solid #43f0a555;color:var(--green);
-  font-size:10px;font-weight:bold
+  display:inline-block;padding:6px 9px;border-radius:6px;
+  background:#35e69a15;color:var(--green);font-size:10px;letter-spacing:1px
 }
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-#loading{text-align:center;padding:60px 15px;color:var(--green)}
-footer{text-align:center;color:#60747e;font-size:10px;padding:30px}
-@media(max-width:600px){
-  header{padding:14px}
-  main{padding:24px 14px 50px}
-  .grid{grid-template-columns:1fr}
-  .panel{padding:17px}
+.action{
+  border:1px solid #35e69a70;border-radius:9px;
+  background:#35e69a12;color:var(--green);
+  padding:11px 15px;margin-top:10px
+}
+.action:hover{background:#35e69a25}
+.action.danger{border-color:#e65c5c70;color:#ff8585;background:#e65c5c12}
+.nav{
+  position:fixed;bottom:0;left:0;right:0;display:grid;
+  grid-template-columns:repeat(4,1fr);background:#0b1219f5;
+  border-top:1px solid var(--border);
+  padding:10px 5px max(10px,env(safe-area-inset-bottom));
+  z-index:10;backdrop-filter:blur(15px)
+}
+.nav button{background:none;border:0;color:var(--muted);font-size:10px;padding:7px 2px}
+.nav button span{display:block;font-size:20px;margin-bottom:5px}
+.nav button.active{color:var(--green)}
+.hidden{display:none!important}
+.map-placeholder{
+  height:310px;border:1px solid var(--border);border-radius:14px;
+  background:#101c22;display:grid;place-items:center;
+  text-align:center;color:var(--muted);padding:20px
+}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:7px;margin:10px 0}
+.field label{font-size:11px;color:var(--muted);letter-spacing:1px}
+.field input,.field select{
+  width:100%;padding:12px;border-radius:9px;
+  border:1px solid var(--border);background:#0b131a;color:var(--text);
+  outline:none
+}
+.field input:focus,.field select:focus{border-color:var(--green)}
+.member{
+  display:flex;align-items:center;gap:12px;
+  padding:13px;margin-top:9px;border:1px solid var(--border);
+  border-radius:11px;background:#0c151d
+}
+.member-info{flex:1;min-width:0}
+.member-name{font-weight:bold;overflow-wrap:anywhere}
+.member-rank{font-size:11px;color:var(--muted);margin-top:5px}
+.rank{
+  display:inline-block;padding:7px 10px;border-radius:7px;
+  font-size:11px;font-weight:bold;letter-spacing:1px;
+  background:#35e69a16;color:var(--green);border:1px solid #35e69a45
+}
+.rank.alpha{background:#e5b94c16;color:#e5b94c;border-color:#e5b94c55}
+.rank.beta{background:#b16cff16;color:#b16cff;border-color:#b16cff55}
+.rank.gamma{background:#39c9ed16;color:#39c9ed;border-color:#39c9ed55}
+.rank.delta{background:#35e69a16;color:#35e69a;border-color:#35e69a55}
+.member-actions{display:flex;gap:6px;flex-wrap:wrap}
+.small-action{
+  padding:7px 9px;border:1px solid var(--border);
+  border-radius:7px;background:#14212c;color:var(--text);font-size:11px
+}
+.empty{padding:25px;text-align:center;color:var(--muted);font-size:13px}
+.notice{
+  border:1px solid #e5b94c55;background:#e5b94c0d;
+  border-radius:10px;padding:12px;color:#e5c879;
+  font-size:12px;line-height:1.5;margin-top:12px
+}
+.rank-heading{margin:20px 0 8px;color:var(--muted);font-size:11px;letter-spacing:2px}
+@media(min-width:700px){
+  .grid{grid-template-columns:repeat(4,1fr)}
+  .members-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+}
+@media(max-width:480px){
+  .form-grid{grid-template-columns:1fr}
+  .member{flex-wrap:wrap}
+  .member-actions{width:100%}
 }
 </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080d12">
+@@ -197,6 +351,25 @@
 </head>
-<body>
 
-<header>
-  <div class="logo">LSF<small>CENTRE DE COMMANDEMENT</small></div>
-  <div class="status" id="connectionStatus">CONNEXION...</div>
+<body>
+<header class="header">
+  <div class="brand">
+    <div class="logo">ALSF</div>
+    <div>
+      <div class="brand-name">ALSF</div>
+      <div class="brand-sub">CENTRE DE COMMANDEMENT</div>
+    </div>
+  </div>
+  <div class="status"><span class="dot"></span>SYSTÈME ACTIF</div>
 </header>
 
 <main>
-  <div id="loading">INITIALISATION DU SYSTÈME...</div>
+<section id="home">
+  <div class="hero">
+    <div class="hero-content">
+      <div class="eyebrow">ALSF / QUARTIER GÉNÉRAL</div>
+      <h1>Bienvenue au QG.</h1>
+      <p class="intro">Centre de coordination et de communication de l'Alliance.</p>
+      <span class="tag">INTERFACE OPÉRATIONNELLE</span>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+@@ -209,10 +382,70 @@
+        <div class="brand-sub">CENTRE DE COMMANDEMENT</div>
+      </div>
+    </div>
+  </div>
+  <div class="section-title">Navigation principale</div>
+  <div class="grid">
+    <button class="card" onclick="showPage('map')">
+      <div class="card-icon">🗺️</div>
+      <div class="card-title">Carte</div>
+      <div class="card-desc">Carte interactive et lieux de rendez-vous.</div>
+    </button>
+    <button class="card" onclick="showPage('chat')">
+      <div class="card-icon">💬</div>
+      <div class="card-title">Communications</div>
+      <div class="card-desc">Salons et conversations privées.</div>
+    </button>
+    <button class="card" onclick="showPage('members')">
+      <div class="card-icon">👥</div>
+      <div class="card-title">Effectifs</div>
+      <div class="card-desc">Membres et classement ALSF.</div>
+    </button>
+    <button class="card" onclick="showPage('admin')">
+      <div class="card-icon">🛡️</div>
+      <div class="card-title">Administration</div>
+      <div class="card-desc">Gestion de l'organisation.</div>
+    </button>
+  </div>
+  <div class="section-title">Informations système</div>
+  <div class="panel">
+    <span class="tag">VERSION 0.2</span>
+    <p>Le classement ALSF est en cours de mise en place. Les données de cette version sont enregistrées localement sur cet appareil.</p>
+  </div>
+</section>
 
-  <!-- CANDIDATURE -->
-  <section id="applicationScreen" class="hidden">
-    <div class="eyebrow">RECRUTEMENT / LSF</div>
-    <h1>Rejoindre LSF.</h1>
-    <p>Avant d'accéder au quartier général, tu dois soumettre une candidature. Elle sera examinée par un administrateur.</p>
+<section id="map" class="hidden">
+  <div class="eyebrow">LOCALISATION</div>
+  <h1>Carte</h1>
+  <p class="intro">Zone principale : Férolles-Attilly et ses environs.</p>
+  <div class="map-placeholder">
+    <div>
+      <div style="font-size:35px">🗺️</div>
+      <strong>Carte ALSF</strong>
+      <p>La carte interactive sera connectée prochainement.</p>
+    <div class="top-actions">
+      <div class="system-state"><span class="pulse"></span>SYSTÈME ACTIF</div>
+      <button id="installButton" class="install-btn hidden" type="button">Installer ALSF</button>
+    </div>
+  </div>
+</section>
 
-    <div class="panel">
-      <h2>Formulaire de candidature</h2>
+<section id="chat" class="hidden">
+  <div class="eyebrow">COMMUNICATIONS</div>
+  <h1>Messagerie</h1>
+  <div class="panel">
+    <strong># Général</strong>
+    <p>Salon de discussion de l'ALSF.</p>
+    <span class="tag">EN PRÉPARATION</span>
+  </div>
+  <div class="panel">
+    <strong># Annonces</strong>
+    <p>Informations officielles de l'organisation.</p>
+  </div>
+  <div class="panel">
+    <strong>Messages privés</strong>
+    <p>Conversations individuelles entre membres.</p>
+  </div>
+</section>
+  </header>
 
-      <form id="applicationForm">
-        <div class="field">
-          <label for="applicantName">NOM OU PSEUDONYME</label>
-          <input id="applicantName" maxlength="30"
-            minlength="2" required placeholder="Ton nom ou pseudonyme">
+  <div class="layout">
+@@ -236,6 +469,10 @@ <h1>Centre de commandement</h1>
+          <p>Bienvenue dans l'interface centrale de l'Alliance.</p>
         </div>
 
-        <div class="field">
-          <label for="motivation">POURQUOI SOUHAITES-TU REJOINDRE LSF ?</label>
-          <textarea id="motivation" minlength="10" maxlength="2000"
-            required placeholder="Présente-toi et explique tes motivations..."></textarea>
+<section id="members" class="hidden">
+  <div class="eyebrow">PERSONNEL</div>
+  <h1>Effectifs</h1>
+  <p class="intro">Classement officiel des membres de l'ALSF.</p>
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="tag">QUARTIER GÉNÉRAL EN LIGNE</span>
+@@ -245,13 +482,42 @@ <h1>Une Alliance.<br>Une seule direction.</h1>
+          </div>
         </div>
 
-        <button class="action" id="submitApplication" type="submit">
-          Envoyer ma candidature
-        </button>
-        <div class="message" id="applicationMessage"></div>
-      </form>
-    </div>
-  </section>
-
-  <!-- ATTENTE / REFUS -->
-  <section id="waitingScreen" class="hidden">
-    <div class="eyebrow">RECRUTEMENT / SUIVI</div>
-    <h1 id="waitingTitle">Candidature envoyée.</h1>
-    <div class="panel">
-      <p id="waitingDescription"></p>
-      <span class="tag" id="applicationStatus"></span>
-    </div>
-  </section>
-
-  <!-- ESPACE MEMBRE -->
-  <section id="memberScreen" class="hidden">
-    <div class="eyebrow">RÉSEAU INTERNE / LSF</div>
-    <h1>Bienvenue au QG.</h1>
-    <p>Accès autorisé. Voici ton espace personnel.</p>
-
-    <div class="navigation" id="memberNavigation">
-      <button class="active" data-page="home">Accueil</button>
-      <button data-page="map">Carte</button>
-      <button data-page="chat">Communications</button>
-      <button data-page="members">Effectifs</button>
-      <button data-page="admin" class="hidden" id="adminNav">Administration</button>
-      <button data-page="cv" class="hidden" id="cvNav">CV</button>
-    </div>
-
-    <div id="homePage" class="memberPage">
-      <div class="panel">
-        <div class="eyebrow">IDENTIFICATION</div>
-        <h2 id="memberNameDisplay">Membre LSF</h2>
-        <span class="tag" id="memberGradeDisplay">GRADE</span>
-        <p id="memberRoleDisplay"></p>
-      </div>
-      <div class="grid">
-        <div class="panel">
-          <h2>Carte</h2>
-          <p>Accéder au module cartographique.</p>
-          <button class="action" data-goto="map">Ouvrir</button>
+  <div class="panel">
+    <h2>Classement général</h2>
+    <p>ALPHA est le rang le plus élevé. DELTA est le rang le plus bas. Le numéro 1 est le meilleur de chaque catégorie.</p>
+    <div id="rankList"></div>
+  </div>
+        <div class="section-label">APERÇU DES EFFECTIFS</div>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-value" id="totalMembers">0</div><div class="stat-label">Membres enregistrés</div></div>
+          <div class="stat-card"><div class="stat-value" id="alphaMembers">0</div><div class="stat-label">Membres ALPHA</div></div>
+          <div class="stat-card"><div class="stat-value" id="deltaMembers">0</div><div class="stat-label">Membres DELTA</div></div>
         </div>
-        <div class="panel">
-          <h2>Communications</h2>
-          <p>Accéder aux communications internes.</p>
-          <button class="action" data-goto="chat">Ouvrir</button>
+
+  <div class="panel">
+    <h2>Ajouter un membre</h2>
+    <div class="field">
+      <label for="memberName">PSEUDO DU MEMBRE</label>
+      <input id="memberName" maxlength="30" placeholder="Ex : Aedan">
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label for="memberCategory">CATÉGORIE</label>
+        <select id="memberCategory">
+          <option value="ALPHA">ALPHA</option>
+          <option value="BETA">BÊTA</option>
+          <option value="GAMMA">GAMMA</option>
+          <option value="DELTA">DELTA</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="memberNumber">NUMÉRO</label>
+        <input id="memberNumber" type="number" min="1" step="1" placeholder="Ex : 1">
+      </div>
+    </div>
+    <button class="action" onclick="addMember()">＋ Ajouter au classement</button>
+    <div id="formMessage" aria-live="polite"></div>
+  </div>
+        <div class="section-label">MODULES DISPONIBLES</div>
+        <div class="dashboard-grid">
+          <button class="module-card" onclick="showPage('map')"><div class="module-icon">⌖</div><div class="module-title">Carte stratégique</div><div class="module-desc">Espace réservé à la future carte des opérations.</div></button>
+@@ -261,6 +527,12 @@ <h1>Une Alliance.<br>Une seule direction.</h1>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <div id="mapPage" class="memberPage hidden">
-      <div class="eyebrow">LOCALISATION</div>
-      <h1>Carte</h1>
-      <div class="panel">
-        <p>Le module cartographique sera développé dans une prochaine étape.</p>
-        <span class="tag">MODULE EN PRÉPARATION</span>
-      </div>
-    </div>
+  <div class="panel">
+    <h2>Annuaire des membres</h2>
+    <div id="memberList"></div>
+  </div>
+  <div class="notice">
+    Version locale de test : les membres et les grades sont enregistrés uniquement dans ce navigateur. La gestion des droits administrateur et la synchronisation entre appareils seront ajoutées séparément.
+      <section id="map" class="page hidden">
+        <div class="page-head">
+          <div class="eyebrow">ALSF <span class="slash">/</span> GÉOGRAPHIE</div>
+@@ -349,6 +621,16 @@ <h2>Stockage des données</h2>
+      </section>
+    </main>
+  </div>
+</section>
 
-    <div id="chatPage" class="memberPage hidden">
-      <div class="eyebrow">RÉSEAU INTERNE</div>
-      <h1>Communications</h1>
-      <div class="panel">
-        <h2>Général</h2>
-        <p>Le système de messagerie sera connecté dans une prochaine étape.</p>
-        <span class="tag">MODULE EN PRÉPARATION</span>
-      </div>
-    </div>
+<section id="admin" class="hidden">
+  <div class="eyebrow">GESTION</div>
+  <h1>Administration</h1>
+  <div class="panel">
+    <strong>Gestion de l'ALSF</strong>
+    <p>Le système de classement est disponible dans la rubrique Effectifs. Les invitations, les permissions et les exclusions seront développées dans les prochaines étapes.</p>
+    <span class="tag">MODULE EN CONSTRUCTION</span>
+    <button class="action" onclick="showPage('members')">Ouvrir le classement</button>
+</div>
 
-    <div id="membersPage" class="memberPage hidden">
-      <div class="eyebrow">PERSONNEL</div>
-      <h1>Effectifs</h1>
-      <div class="panel">
-        <p>L'annuaire complet sera développé dans une prochaine étape.</p>
-      </div>
-    </div>
-
-    <!-- ADMINISTRATION -->
-    <div id="adminPage" class="memberPage hidden">
-      <div class="eyebrow">CONTRÔLE CENTRAL</div>
-      <h1>Administration</h1>
-      <div class="panel">
-        <h2>Gestion de l'organisation</h2>
-        <p>Ton compte dispose des droits d'administration.</p>
-        <span class="tag">ACCÈS ADMINISTRATEUR</span>
-      </div>
-    </div>
-
-    <!-- CV -->
-    <div id="cvPage" class="memberPage hidden">
-      <div class="eyebrow">RECRUTEMENT / ADMINISTRATION</div>
-      <h1>Candidatures</h1>
-      <p>Examine les dossiers et décide de leur admission.</p>
-      <div id="applicationsList">
-        <div class="card">Chargement des candidatures...</div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <button class="action secondary" id="signOutButton">Se déconnecter</button>
-    </div>
-  </section>
+<div id="installHelp" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="installHelpTitle">
+@@ -358,34 +640,60 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
+    <p id="installHelpText">Ouvre le menu de ton navigateur puis choisis « Ajouter à l'écran d'accueil » ou « Installer l'application ».</p>
+    <div class="modal-actions"><button class="secondary-btn" onclick="closeInstallHelp()">Fermer</button></div>
+  </div>
+</section>
 </main>
 
-<footer>LSF · CENTRE DE COMMANDEMENT</footer>
+<nav class="nav">
+  <button class="active" data-page="home" onclick="showPage('home')"><span>⌂</span>Accueil</button>
+  <button data-page="map" onclick="showPage('map')"><span>⌖</span>Carte</button>
+  <button data-page="chat" onclick="showPage('chat')"><span>▤</span>Chat</button>
+  <button data-page="members" onclick="showPage('members')"><span>♙</span>Membres</button>
+</nav>
+</div>
 
 <script>
 "use strict";
 
-/* ========================================
-   CONFIGURATION SUPABASE
-======================================== */
+const STORAGE_KEY = "alsf_members_v1";
+const CATEGORY_ORDER = ["ALPHA","BETA","GAMMA","DELTA"];
+const CATEGORY_LABELS = {
+  ALPHA:"ALPHA",
+  BETA:"BÊTA",
+  GAMMA:"GAMMA",
+  DELTA:"DELTA"
+};
+const CATEGORY_ORDER = ["ALPHA", "BETA", "GAMMA", "DELTA"];
+const CATEGORY_LABELS = { ALPHA:"ALPHA", BETA:"BÊTA", GAMMA:"GAMMA", DELTA:"DELTA" };
 
-const SUPABASE_URL = "https://vmvmvqnhglnthifxkajo.supabase.co";
-const SUPABASE_KEY = "sb_publishable_K1a5f8DU7-HijfRB4UiDSQ_uD_eB230";
+let members = loadMembers();
+let deferredInstallPrompt = null;
 
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-let currentUser = null;
-let currentMember = null;
-let currentApplication = null;
-
-/* ========================================
-   OUTILS D'AFFICHAGE
-======================================== */
-
-const $ = id => document.getElementById(id);
-
-function showScreen(id) {
-  ["loading","applicationScreen","waitingScreen","memberScreen"]
-    .forEach(screen => $(screen).classList.add("hidden"));
-  $(id).classList.remove("hidden");
-}
-
-function setMessage(id, message, type="") {
-  const target = $(id);
-  target.textContent = message;
-  target.className = "message " + type;
-}
-
-function gradeText(member) {
-  return member.grade_category + " " + member.grade_number;
-}
-
-/* ========================================
-   INITIALISATION ET AUTHENTIFICATION
-======================================== */
-
-async function initialize() {
+function loadMembers(){
+  try{
+function loadMembers() {
   try {
-    let { data: { session }, error } = await db.auth.getSession();
-    if (error) throw error;
-
-    if (!session) {
-      const result = await db.auth.signInAnonymously();
-      if (result.error) throw result.error;
-      session = result.data.session;
-    }
-
-    currentUser = session.user;
-    $("connectionStatus").textContent = "SYSTÈME CONNECTÉ";
-
-    await loadUserState();
-
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  }catch(error){
+    return Array.isArray(saved) ? saved.filter(isValidMember) : [];
   } catch (error) {
-    console.error(error);
-    $("connectionStatus").textContent = "ERREUR";
-    showScreen("applicationScreen");
-    $("applicationForm").classList.add("hidden");
-    setMessage(
-      "applicationMessage",
-      "Impossible de se connecter à LSF : " + error.message,
-      "error"
-    );
+    console.error("Lecture des membres impossible :", error);
+    return [];
   }
 }
 
-/* ========================================
-   ÉTAT DU COMPTE
-======================================== */
-
-async function loadUserState() {
-  showScreen("loading");
-
-  const memberResult = await db
-    .from("alsf_members")
-    .select("user_id,member_name,grade_category,grade_number,system_role,is_active")
-    .eq("user_id", currentUser.id)
-    .maybeSingle();
-
-  if (memberResult.error) throw memberResult.error;
-
-  currentMember = memberResult.data;
-
-  if (currentMember && currentMember.is_active) {
-    await showMemberSpace();
-    return;
-  }
-
-  const applicationResult = await db
-    .from("lsf_applications")
-    .select("*")
-    .eq("applicant_id", currentUser.id)
-    .maybeSingle();
-
-  if (applicationResult.error) throw applicationResult.error;
-
-  currentApplication = applicationResult.data;
-
-  if (!currentApplication) {
-    showScreen("applicationScreen");
-  } else if (currentApplication.status === "pending") {
-    showWaitingScreen("pending");
-  } else if (currentApplication.status === "refused") {
-    showWaitingScreen("refused");
-  } else {
-    showScreen("waitingScreen");
-    $("waitingTitle").textContent = "Candidature acceptée";
-    $("waitingDescription").textContent =
-      "Ta candidature a été acceptée. Si ton accès n'apparaît pas, contacte un administrateur.";
-  }
+function saveMembers(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
+function isValidMember(member) {
+  return member && typeof member.name === "string" &&
+    CATEGORY_ORDER.includes(member.category) &&
+    Number.isInteger(Number(member.number)) && Number(member.number) > 0;
 }
 
-/* ========================================
-   ENVOI DU CV
-======================================== */
-
-$("applicationForm").addEventListener("submit", async event => {
-  event.preventDefault();
-
-  const name = $("applicantName").value.trim();
-  const motivation = $("motivation").value.trim();
-
-  if (name.length < 2 || motivation.length < 10) {
-    setMessage("applicationMessage",
-      "Vérifie les informations saisies.", "error");
-    return;
-  }
-
-  const button = $("submitApplication");
-  button.disabled = true;
-  button.textContent = "ENVOI EN COURS...";
-
-  try {
-    const { error } = await db
-      .from("lsf_applications")
-      .insert({
-        applicant_id: currentUser.id,
-        applicant_name: name,
-        motivation: motivation
-      });
-
-    if (error) throw error;
-
-    const result = await db
-      .from("lsf_applications")
-      .select("*")
-      .eq("applicant_id", currentUser.id)
-      .single();
-
-    if (result.error) throw result.error;
-
-    currentApplication = result.data;
-    showWaitingScreen("pending");
-
-  } catch (error) {
-    console.error(error);
-    setMessage("applicationMessage",
-      "Erreur lors de l'envoi : " + error.message, "error");
-  } finally {
-    button.disabled = false;
-    button.textContent = "Envoyer ma candidature";
-  }
-});
-
-function showWaitingScreen(status) {
-  showScreen("waitingScreen");
-
-  if (status === "pending") {
-    $("waitingTitle").textContent = "Candidature envoyée.";
-    $("waitingDescription").textContent =
-      "Ton dossier est bien enregistré. Un administrateur LSF doit maintenant examiner ta candidature.";
-    $("applicationStatus").textContent = "EN ATTENTE";
-  } else {
-    $("waitingTitle").textContent = "Candidature refusée.";
-    $("waitingDescription").textContent =
-      "Ta candidature n'a pas été retenue. Contacte un administrateur LSF pour obtenir davantage d'informations.";
-    $("applicationStatus").textContent = "REFUSÉE";
-  }
-}
-
-/* ========================================
-   ESPACE MEMBRE
-======================================== */
-
-async function showMemberSpace() {
-  showScreen("memberScreen");
-
-  $("memberNameDisplay").textContent = currentMember.member_name;
-  $("memberGradeDisplay").textContent = gradeText(currentMember);
-
-  const isAdmin = ["admin","developer"].includes(currentMember.system_role);
-
-  $("memberRoleDisplay").textContent =
-    isAdmin ? "Droits d'administration activés." : "Membre de LSF.";
-
-  $("adminNav").classList.toggle("hidden", !isAdmin);
-  $("cvNav").classList.toggle("hidden", !isAdmin);
-
-  if (isAdmin) {
-    await loadApplications();
-  }
-
-  showMemberPage("home");
-}
-
-function showMemberPage(page) {
-  document.querySelectorAll(".memberPage").forEach(element => {
-    element.classList.add("hidden");
+function showPage(page){
+  document.querySelectorAll("main section").forEach(section=>{
+    section.classList.add("hidden");
   });
+function saveMembers() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
+@@ -399,6 +707,7 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
 
-  const selected = $(page + "Page");
+function showPage(page) {
+  const selected = document.getElementById(page);
+  if(selected) selected.classList.remove("hidden");
   if (!selected) return;
 
-  selected.classList.remove("hidden");
+  document.querySelectorAll("main > section").forEach(section => section.classList.add("hidden"));
+@@ -407,33 +716,46 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
+  void selected.offsetWidth;
+  selected.style.animation = "";
 
-  document.querySelectorAll("#memberNavigation button").forEach(button => {
+  document.querySelectorAll(".nav button").forEach(button=>{
+    button.classList.toggle("active",button.dataset.page===page);
+  document.querySelectorAll("[data-page]").forEach(button => {
     button.classList.toggle("active", button.dataset.page === page);
   });
+  window.scrollTo(0,0);
+  if(page==="members") renderMembers();
 
-  if (page === "cv") loadApplications();
+  window.scrollTo({top:0, behavior:"smooth"});
+
+  if (page === "members") renderMembers();
+  if (page === "home") renderStats();
 }
 
-document.querySelectorAll("#memberNavigation button").forEach(button => {
-  button.addEventListener("click", () => {
-    if (button.classList.contains("hidden")) return;
-    showMemberPage(button.dataset.page);
-  });
-});
+function getRankNumber(member){
+function getRankNumber(member) {
+  return Number(member.number);
+}
 
-document.querySelectorAll("[data-goto]").forEach(button => {
-  button.addEventListener("click", () => {
-    showMemberPage(button.dataset.goto);
-  });
-});
+function compareMembers(a,b){
+  const categoryDifference =
+    CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+  if(categoryDifference !== 0) return categoryDifference;
+  return getRankNumber(a)-getRankNumber(b);
+function compareMembers(a, b) {
+  const categoryDifference = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+  return categoryDifference || getRankNumber(a) - getRankNumber(b);
+}
 
-/* ========================================
-   ADMIN : LISTE DES CANDIDATURES
-======================================== */
+function rankClass(category){
+function rankClass(category) {
+  return category.toLowerCase();
+}
 
-async function loadApplications() {
-  const target = $("applicationsList");
-  target.textContent = "Chargement...";
+function formatRank(member){
+function formatRank(member) {
+  return CATEGORY_LABELS[member.category] + " " + member.number;
+}
 
-  try {
-    const { data, error } = await db
-      .from("lsf_applications")
-      .select("*")
-      .order("created_at", { ascending: true });
+function renderMembers(){
+function renderStats() {
+  document.getElementById("totalMembers").textContent = members.length;
+  document.getElementById("alphaMembers").textContent = members.filter(m => m.category === "ALPHA").length;
+@@ -445,6 +767,10 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
+  const list = document.getElementById("memberList");
+  const rankList = document.getElementById("rankList");
 
-    if (error) throw error;
+  if(sorted.length===0){
+    list.innerHTML='<div class="empty">Aucun membre enregistré pour le moment.</div>';
+  }else{
+    list.innerHTML=sorted.map(member=>`
+  document.getElementById("directoryCount").textContent = `${sorted.length} membre${sorted.length > 1 ? "s" : ""}`;
 
-    const pending = data.filter(item => item.status === "pending");
-
-    if (!pending.length) {
-      target.textContent = "Aucune candidature en attente.";
-      return;
-    }
-
-    target.replaceChildren();
-
-    pending.forEach(application => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      const title = document.createElement("h2");
-      title.textContent = application.applicant_name;
-
-      const status = document.createElement("span");
-      status.className = "tag";
-      status.textContent = "EN ATTENTE";
-
-      const motivationLabel = document.createElement("p");
-      motivationLabel.textContent = "MOTIVATION";
-
-      const motivation = document.createElement("p");
-      motivation.textContent = application.motivation;
-      motivation.style.whiteSpace = "pre-wrap";
-
-      const gradeLabel = document.createElement("label");
-      gradeLabel.textContent = "GRADE À ATTRIBUER";
-
-      const grade = document.createElement("select");
-      grade.innerHTML =
-        '<option value="DELTA">DELTA</option>' +
-        '<option value="ALPHA">ALPHA</option>';
-
-      const number = document.createElement("input");
-      number.type = "number";
-      number.min = "1";
-      number.step = "1";
-      number.placeholder = "Numéro du grade";
-      number.value = "1";
-
-      const actions = document.createElement("div");
-      actions.className = "actions";
-
-      const accept = document.createElement("button");
-      accept.className = "action";
-      accept.textContent = "Accepter";
-
-      const refuse = document.createElement("button");
-      refuse.className = "action danger";
-      refuse.textContent = "Refuser";
-
-      accept.addEventListener("click", () => {
-        reviewApplication(application.id, "accepted", grade.value, Number(number.value), accept);
-      });
-
-      refuse.addEventListener("click", () => {
-        if (confirm("Refuser la candidature de " + application.applicant_name + " ?")) {
-          reviewApplication(application.id, "refused", null, null, refuse);
-        }
-      });
-
-      actions.append(accept, refuse);
-      card.append(title, status, motivationLabel, motivation, gradeLabel, grade, number, actions);
-      target.append(card);
-    });
-
-  } catch (error) {
-    console.error(error);
-    target.textContent = "Impossible de charger les candidatures : " + error.message;
+  if (!sorted.length) {
+@@ -454,75 +780,147 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
+      <div class="member">
+        <div class="member-info">
+          <div class="member-name">${escapeHTML(member.name)}</div>
+          <div class="member-rank">Position dans le classement</div>
+          <div class="member-rank">Membre de l'Alliance</div>
+        </div>
+        <span class="rank ${rankClass(member.category)}">${formatRank(member)}</span>
+        <div class="member-actions">
+          <button class="small-action" onclick="editMember('${member.id}')">Modifier</button>
+          <button class="small-action" onclick="deleteMember('${member.id}')">Supprimer</button>
+          <button class="small-action" onclick="editMember('${escapeAttribute(member.id)}')">Modifier</button>
+          <button class="small-action" onclick="deleteMember('${escapeAttribute(member.id)}')">Supprimer</button>
+        </div>
+      </div>
+    `).join("");
+      </div>`).join("");
   }
+
+  const categories = CATEGORY_ORDER.map(category=>{
+    const group=sorted.filter(member=>member.category===category);
+    return `
+      <div class="rank-heading">${CATEGORY_LABELS[category]}</div>
+      ${group.length ? group.map(member=>`
+  rankList.innerHTML = CATEGORY_ORDER.map(category => {
+    const group = sorted.filter(member => member.category === category);
+
+    return `<div class="rank-heading">${CATEGORY_LABELS[category]}</div>` +
+      (group.length ? group.map(member => `
+        <div class="member">
+          <div class="member-info">${escapeHTML(member.name)}</div>
+          <div class="member-info"><div class="member-name">${escapeHTML(member.name)}</div></div>
+          <span class="rank ${rankClass(category)}">${formatRank(member)}</span>
+        </div>
+      `).join("") : '<div class="empty">Aucun membre dans cette catégorie.</div>'}
+    `;
+        </div>`).join("") : '<div class="empty">Aucun membre dans cette catégorie.</div>');
+  }).join("");
+
+  rankList.innerHTML=categories;
+  renderStats();
 }
 
-/* ========================================
-   ADMIN : ACCEPTATION / REFUS
-======================================== */
+function addMember(){
+  const nameInput=document.getElementById("memberName");
+  const categoryInput=document.getElementById("memberCategory");
+  const numberInput=document.getElementById("memberNumber");
+  const message=document.getElementById("formMessage");
+function addMember() {
+  const nameInput = document.getElementById("memberName");
+  const category = document.getElementById("memberCategory").value;
+  const number = Number(document.getElementById("memberNumber").value);
+  const name = nameInput.value.trim();
 
-async function reviewApplication(id, decision, category, number, button) {
-  if (decision === "accepted" &&
-      (!Number.isSafeInteger(number) || number < 1)) {
-    alert("Le numéro du grade doit être un entier supérieur à zéro.");
+  const name=nameInput.value.trim();
+  const category=categoryInput.value;
+  const number=Number(numberInput.value);
+  if (!name) return showMessage("Entre un pseudo pour le membre.", "error");
+
+  if(!name){
+    showMessage("Entre un pseudo pour le membre.","error");
+    return;
+  }
+  if(!Number.isInteger(number)||number<1){
+    showMessage("Le numéro doit être un entier supérieur ou égal à 1.","error");
+    return;
+  }
+  if (!Number.isSafeInteger(number) || number < 1)
+    return showMessage("Le numéro doit être un entier supérieur ou égal à 1.", "error");
+
+  if (members.some(member => member.category === category && Number(member.number) === number))
+    return showMessage("Ce rang est déjà occupé par un autre membre.", "error");
+
+  const occupied=members.some(member=>
+    member.category===category && Number(member.number)===number
+  );
+  if(occupied){
+    showMessage("Ce rang est déjà occupé par un autre membre.","error");
+  members.push({id:makeId(), name, category, number});
+
+  if (!saveMembers()) {
+    members.pop();
     return;
   }
 
-  button.disabled = true;
+  members.push({
+    id:makeId(),
+    name,
+    category,
+    number
+  });
+  saveMembers();
+  nameInput.value="";
+  numberInput.value="";
+  showMessage("Membre ajouté au classement ALSF.","success");
+  nameInput.value = "";
+  document.getElementById("memberNumber").value = "";
 
-  try {
-    const { error } = await db.rpc("review_lsf_application", {
-      p_application_id: id,
-      p_decision: decision,
-      p_grade_category: category,
-      p_grade_number: number
-    });
-
-    if (error) throw error;
-
-    alert(decision === "accepted"
-      ? "Candidature acceptée. Le membre a été créé."
-      : "Candidature refusée.");
-
-    await loadApplications();
-
-  } catch (error) {
-    console.error(error);
-    alert("Impossible de traiter cette candidature : " + error.message);
-    button.disabled = false;
-  }
+  showMessage("Membre ajouté au classement ALSF.", "success");
+  renderMembers();
 }
 
-/* ========================================
-   DÉCONNEXION
-======================================== */
+function editMember(id){
+  const member=members.find(item=>item.id===id);
+  if(!member) return;
+function editMember(id) {
+  const member = members.find(item => item.id === id);
+  if (!member) return;
 
-$("signOutButton").addEventListener("click", async () => {
-  if (!confirm("Se déconnecter de LSF ?")) return;
+  const newName=prompt("Nouveau pseudo :",member.name);
+  if(newName===null) return;
+  if(!newName.trim()){
+    alert("Le pseudo ne peut pas être vide.");
+    return;
+  }
+  const newName = prompt("Nouveau pseudo :", member.name);
+  if (newName === null) return;
+  if (!newName.trim()) return alert("Le pseudo ne peut pas être vide.");
 
-  const { error } = await db.auth.signOut();
+  const newRank=prompt(
+    "Nouveau grade (ex : ALPHA 1, BETA 2, GAMMA 3, DELTA 4) :",
+    formatRank(member)
+  );
+  if(newRank===null) return;
+  const newRank = prompt("Nouveau grade (ex : ALPHA 1, BÊTA 2, GAMMA 3, DELTA 4) :", formatRank(member));
+  if (newRank === null) return;
 
-  if (error) {
-    alert(error.message);
+  const match=newRank.trim().toUpperCase().match(/^(ALPHA|BETA|BÊTA|GAMMA|DELTA)\s+([1-9]\d*)$/);
+  if(!match){
+    alert("Format invalide. Exemple : DELTA 2.");
+    return;
+  }
+  const match = newRank.trim().toUpperCase().match(/^(ALPHA|BETA|BÊTA|GAMMA|DELTA)\s+([1-9]\d*)$/);
+  if (!match) return alert("Format invalide. Exemple : DELTA 2.");
+
+  const category=match[1]==="BÊTA" ? "BETA" : match[1];
+  const number=Number(match[2]);
+  const category = match[1] === "BÊTA" ? "BETA" : match[1];
+  const number = Number(match[2]);
+
+  const occupied=members.some(item=>
+    item.id!==id && item.category===category && Number(item.number)===number
+  );
+  if(occupied){
+    alert("Ce rang est déjà occupé.");
+  if (!Number.isSafeInteger(number)) return alert("Numéro trop élevé.");
+
+  if (members.some(item => item.id !== id && item.category === category && Number(item.number) === number))
+@@ -552,9 +950,20 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
     return;
   }
 
-  location.reload();
-});
+  member.name=newName.trim();
+  member.category=category;
+  member.number=number;
+  saveMembers();
+  renderMembers();
+}
 
-/* ========================================
-   DÉMARRAGE
-======================================== */
+function deleteMember(id){
+  const member=members.find(item=>item.id===id);
+  if(!member) return;
+  if(!confirm("Supprimer "+member.name+" du classement ?")) return;
+  members=members.filter(item=>item.id!==id);
+  saveMembers();
+  renderMembers();
+function showMessage(message, type) {
+  const target = document.getElementById("formMessage");
+  target.textContent = message;
+@@ -565,12 +974,20 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
 
-initialize();
+function showMessage(message,type){
+  const target=document.getElementById("formMessage");
+  target.textContent=message;
+  target.style.marginTop="12px";
+  target.style.fontSize="12px";
+  target.style.color=type==="success" ? "var(--green)" : "#ff8585";
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+  }[char]));
+}
+
+function makeId(){
+  return Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+function escapeAttribute(value) {
+  return escapeHTML(value).replace(/`/g, "&#096;");
+}
+@@ -621,19 +1038,26 @@ <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
+  document.getElementById("installHelp").classList.remove("hidden");
+}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,char=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
+function closeInstallHelp() {
+  document.getElementById("installHelp").classList.add("hidden");
+}
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error=>console.error("Service Worker:",error));
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
+      .then(registration => registration.update())
+      .catch(error => console.error("Service Worker :", error));
+  });
+}
+
+renderMembers();
 </script>
 </body>
 </html>
