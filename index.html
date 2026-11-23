@@ -71,6 +71,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .error{color:var(--red)}
 .muted{color:var(--muted)}
 .hidden{display:none!important}
+#developerModal:not(.hidden){display:flex!important}
 .navigation{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px}
 .navigation button{
   border:1px solid var(--line);border-radius:9px;
@@ -103,8 +104,33 @@ footer{text-align:center;color:#60747e;font-size:10px;padding:30px}
 
 <header>
   <div class="logo">LSF<small>CENTRE DE COMMANDEMENT</small></div>
-  <div class="status" id="connectionStatus">CONNEXION...</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end">
+    <button class="action" id="developerAccessButton" type="button">ACCÈS DÉVELOPPEUR</button>
+    <div class="status" id="connectionStatus">CONNEXION...</div>
+  </div>
 </header>
+
+<!-- FENÊTRE ACCÈS DÉVELOPPEUR -->
+<div id="developerModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="developerModalTitle"
+  style="position:fixed;inset:0;z-index:20;background:#000b;display:flex;align-items:center;justify-content:center;padding:18px">
+  <div class="panel" style="width:min(440px,100%);margin:0;box-shadow:0 20px 80px #000a">
+    <div class="eyebrow">ACCÈS RESTREINT</div>
+    <h2 id="developerModalTitle">Authentification développeur</h2>
+    <p>Entre le code spécial à usage unique pour activer les droits développeur sur ce compte.</p>
+    <form id="developerCodeForm">
+      <div class="field">
+        <label for="developerCode">CODE SPÉCIAL</label>
+        <input id="developerCode" type="password" autocomplete="one-time-code"
+          maxlength="200" required placeholder="Saisis ton code secret">
+      </div>
+      <div class="actions">
+        <button class="action" id="developerCodeSubmit" type="submit">Vérifier le code</button>
+        <button class="action secondary" id="developerModalClose" type="button">Annuler</button>
+      </div>
+      <div class="message" id="developerCodeMessage" aria-live="polite"></div>
+    </form>
+  </div>
+</div>
 
 <main>
   <div id="loading">INITIALISATION DU SYSTÈME...</div>
@@ -117,7 +143,6 @@ footer{text-align:center;color:#60747e;font-size:10px;padding:30px}
 
     <div class="panel">
       <h2>Formulaire de candidature</h2>
-
       <form id="applicationForm">
         <div class="field">
           <label for="applicantName">NOM OU PSEUDONYME</label>
@@ -244,9 +269,7 @@ footer{text-align:center;color:#60747e;font-size:10px;padding:30px}
 <script>
 "use strict";
 
-/* ========================================
-   CONFIGURATION SUPABASE
-======================================== */
+/* CONFIGURATION SUPABASE */
 
 const SUPABASE_URL = "https://vmvmvqnhglnthifxkajo.supabase.co";
 const SUPABASE_KEY = "sb_publishable_K1a5f8DU7-HijfRB4UiDSQ_uD_eB230";
@@ -260,9 +283,7 @@ let currentUser = null;
 let currentMember = null;
 let currentApplication = null;
 
-/* ========================================
-   OUTILS D'AFFICHAGE
-======================================== */
+/* OUTILS D'AFFICHAGE */
 
 const $ = id => document.getElementById(id);
 
@@ -282,9 +303,7 @@ function gradeText(member) {
   return member.grade_category + " " + member.grade_number;
 }
 
-/* ========================================
-   INITIALISATION ET AUTHENTIFICATION
-======================================== */
+/* INITIALISATION ET AUTHENTIFICATION */
 
 async function initialize() {
   try {
@@ -315,9 +334,7 @@ async function initialize() {
   }
 }
 
-/* ========================================
-   ÉTAT DU COMPTE
-======================================== */
+/* ÉTAT DU COMPTE */
 
 async function loadUserState() {
   showScreen("loading");
@@ -361,9 +378,7 @@ async function loadUserState() {
   }
 }
 
-/* ========================================
-   ENVOI DU CV
-======================================== */
+/* ENVOI DU CV */
 
 $("applicationForm").addEventListener("submit", async event => {
   event.preventDefault();
@@ -429,9 +444,7 @@ function showWaitingScreen(status) {
   }
 }
 
-/* ========================================
-   ESPACE MEMBRE
-======================================== */
+/* ESPACE MEMBRE */
 
 async function showMemberSpace() {
   showScreen("memberScreen");
@@ -484,9 +497,7 @@ document.querySelectorAll("[data-goto]").forEach(button => {
   });
 });
 
-/* ========================================
-   ADMIN : LISTE DES CANDIDATURES
-======================================== */
+/* ADMIN : LISTE DES CANDIDATURES */
 
 async function loadApplications() {
   const target = $("applicationsList");
@@ -574,9 +585,7 @@ async function loadApplications() {
   }
 }
 
-/* ========================================
-   ADMIN : ACCEPTATION / REFUS
-======================================== */
+/* ADMIN : ACCEPTATION / REFUS */
 
 async function reviewApplication(id, decision, category, number, button) {
   if (decision === "accepted" &&
@@ -610,9 +619,7 @@ async function reviewApplication(id, decision, category, number, button) {
   }
 }
 
-/* ========================================
-   DÉCONNEXION
-======================================== */
+/* DÉCONNEXION */
 
 $("signOutButton").addEventListener("click", async () => {
   if (!confirm("Se déconnecter de LSF ?")) return;
@@ -627,9 +634,68 @@ $("signOutButton").addEventListener("click", async () => {
   location.reload();
 });
 
-/* ========================================
-   DÉMARRAGE
-======================================== */
+/* ACCÈS DÉVELOPPEUR PAR CODE À USAGE UNIQUE */
+
+$("developerAccessButton").addEventListener("click", () => {
+  $("developerCodeMessage").textContent = "";
+  $("developerCodeMessage").className = "message";
+  $("developerCode").value = "";
+  $("developerModal").classList.remove("hidden");
+  $("developerCode").focus();
+});
+
+$("developerModalClose").addEventListener("click", () => {
+  $("developerModal").classList.add("hidden");
+});
+
+$("developerModal").addEventListener("click", event => {
+  if (event.target === $("developerModal")) {
+    $("developerModal").classList.add("hidden");
+  }
+});
+
+$("developerCodeForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const code = $("developerCode").value.trim();
+  const button = $("developerCodeSubmit");
+
+  if (!code) return;
+
+  button.disabled = true;
+  button.textContent = "VÉRIFICATION...";
+  setMessage("developerCodeMessage", "Vérification sécurisée auprès de LSF...", "");
+
+  try {
+    if (!currentUser) {
+      throw new Error("La connexion n'est pas encore prête. Réessaie dans quelques secondes.");
+    }
+
+    const { error } = await db.rpc("claim_lsf_developer_access", {
+      p_code: code
+    });
+
+    if (error) throw error;
+
+    setMessage("developerCodeMessage",
+      "Code accepté. Les droits développeur sont activés.", "success");
+
+    $("developerCode").value = "";
+    await new Promise(resolve => setTimeout(resolve, 700));
+    $("developerModal").classList.add("hidden");
+    await loadUserState();
+
+  } catch (error) {
+    console.error(error);
+    setMessage("developerCodeMessage",
+      error.message || "Code invalide ou déjà utilisé.", "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Vérifier le code";
+  }
+});
+
+/* DÉMARRAGE */
 
 initialize();
 </script>
