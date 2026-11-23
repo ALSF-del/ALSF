@@ -1,1063 +1,637 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080d12">
-<meta name="description" content="ALSF - Centre de commandement">
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
-<title>ALSF | Centre de commandement</title>
+<title>LSF | Centre de commandement</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
+  color-scheme:dark;
   --bg:#080d12;
-  --panel:#101922;
-  --panel2:#14212c;
-  --green:#35e69a;
-  --blue:#39c9ed;
-  --text:#e8f1f5;
-  --muted:#80929d;
-  --border:#233541;
+  --panel:#101b24;
+  --panel2:#14232d;
+  --line:#263b47;
+  --green:#43f0a5;
+  --cyan:#45d9f5;
+  --text:#eaf4f7;
+  --muted:#8ca0aa;
+  --red:#ff777e;
 }
 *{box-sizing:border-box}
 body{
-  margin:0;
-  background:radial-gradient(ellipse at 50% -20%,#12352d 0%,transparent 55%),var(--bg);
-  color:var(--text);
-  font-family:Arial,sans-serif;
-  min-height:100vh;
+  margin:0;background:
+  radial-gradient(ellipse at 10% 0%,#164d3a55,transparent 40%),
+  linear-gradient(180deg,#080e14,#070c11);
+  color:var(--text);font-family:Inter,Arial,sans-serif;min-height:100vh
 }
-button,input,select{font:inherit}
+button,input,textarea,select{font:inherit}
 button{cursor:pointer}
-.header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:17px 20px;border-bottom:1px solid var(--border);
-  background:#080d12ef;position:sticky;top:0;z-index:5;
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:17px 25px;border-bottom:1px solid var(--line);
+  background:#080e14e8;position:sticky;top:0;z-index:5;
   backdrop-filter:blur(15px)
 }
-.brand{display:flex;align-items:center;gap:11px}
-.logo{
-  width:43px;height:43px;border:1px solid #35e69a70;
-  border-radius:12px;background:#12342b;display:grid;
-  place-items:center;color:var(--green);font-weight:900;
-  letter-spacing:-1px;font-size:12px
-}
-.brand-name{font-weight:900;letter-spacing:3px}
-.brand-sub{color:var(--muted);font-size:9px;letter-spacing:2px;margin-top:4px}
-.status{color:var(--green);font-size:10px;letter-spacing:1px}
-.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px}
-main{max-width:1050px;margin:auto;padding:25px 18px 110px}
-.eyebrow{color:var(--green);font-size:10px;letter-spacing:3px;font-weight:bold}
-h1{font-size:clamp(26px,5vw,42px);margin:10px 0}
-h2{font-size:18px;margin:0 0 14px}
-.intro{color:var(--muted);line-height:1.6;font-size:14px}
-.hero{
-  border:1px solid #35e69a40;border-radius:18px;padding:24px;
-  background:linear-gradient(135deg,#11251f,#101922 70%);
-  position:relative;overflow:hidden
-}
-.hero:after{
-  content:"ALSF";position:absolute;right:5px;bottom:-24px;
-  font-size:100px;font-weight:900;color:#ffffff08;
-  letter-spacing:-8px;pointer-events:none
-}
-.hero-content{position:relative;z-index:1}
-.section-title{
-  margin:27px 0 13px;font-size:12px;letter-spacing:2px;
-  color:var(--muted);text-transform:uppercase
-}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.card{
-  background:linear-gradient(145deg,var(--panel2),var(--panel));
-  border:1px solid var(--border);border-radius:15px;padding:18px;
-  min-height:130px;text-align:left;color:var(--text);transition:.2s
-}
-.card:hover{border-color:var(--green);transform:translateY(-2px)}
-.card-icon{font-size:25px;margin-bottom:15px}
-.card-title{font-weight:bold;font-size:14px}
-.card-desc{color:var(--muted);font-size:11px;margin-top:7px;line-height:1.5}
+.logo{font-size:22px;font-weight:950;letter-spacing:5px;color:var(--green)}
+.logo small{display:block;font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px}
+.status{font-size:10px;color:var(--green);letter-spacing:1px}
+main{max-width:1050px;margin:auto;padding:35px 20px 70px}
+h1{font-size:clamp(28px,5vw,43px);margin:10px 0}
+h2{font-size:18px;margin-top:0}
+p{color:var(--muted);font-size:13px;line-height:1.7}
+.eyebrow{color:var(--green);font-size:10px;letter-spacing:2px;font-weight:bold}
 .panel{
-  border:1px solid var(--border);background:var(--panel);
-  border-radius:15px;padding:19px;margin-top:14px
+  background:linear-gradient(145deg,#13222c,#0d161e);
+  border:1px solid var(--line);border-radius:17px;
+  padding:22px;margin:15px 0
 }
-.panel p{color:var(--muted);font-size:13px;line-height:1.6}
-.tag{
-  display:inline-block;padding:6px 9px;border-radius:6px;
-  background:#35e69a15;color:var(--green);font-size:10px;letter-spacing:1px
+.field{display:grid;gap:7px;margin:15px 0}
+label{font-size:10px;color:#a7bac2;font-weight:bold;letter-spacing:1px}
+input,textarea,select{
+  width:100%;padding:13px;border-radius:10px;
+  border:1px solid var(--line);background:#091119;
+  color:var(--text);outline:none
 }
-.action{
-  border:1px solid #35e69a70;border-radius:9px;
-  background:#35e69a12;color:var(--green);
-  padding:11px 15px;margin-top:10px
+textarea{min-height:140px;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--green)}
+button.action{
+  border:1px solid #43f0a566;border-radius:10px;
+  padding:12px 16px;background:#43f0a51a;
+  color:var(--green);font-weight:bold
 }
-.action:hover{background:#35e69a25}
-.action.danger{border-color:#e65c5c70;color:#ff8585;background:#e65c5c12}
-.nav{
-  position:fixed;bottom:0;left:0;right:0;display:grid;
-  grid-template-columns:repeat(4,1fr);background:#0b1219f5;
-  border-top:1px solid var(--border);
-  padding:10px 5px max(10px,env(safe-area-inset-bottom));
-  z-index:10;backdrop-filter:blur(15px)
-}
-.nav button{background:none;border:0;color:var(--muted);font-size:10px;padding:7px 2px}
-.nav button span{display:block;font-size:20px;margin-bottom:5px}
-.nav button.active{color:var(--green)}
+button.action:hover{background:#43f0a533}
+button.secondary{border-color:var(--line);color:var(--text);background:#172630}
+button.danger{border-color:#ff777e66;color:#ff9ba0;background:#ff777e12}
+button:disabled{opacity:.5;cursor:not-allowed}
+.message{margin-top:12px;font-size:12px;line-height:1.6}
+.success{color:var(--green)}
+.error{color:var(--red)}
+.muted{color:var(--muted)}
 .hidden{display:none!important}
-.map-placeholder{
-  height:310px;border:1px solid var(--border);border-radius:14px;
-  background:#101c22;display:grid;place-items:center;
-  text-align:center;color:var(--muted);padding:20px
+.navigation{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px}
+.navigation button{
+  border:1px solid var(--line);border-radius:9px;
+  background:var(--panel);color:var(--muted);padding:10px 13px
 }
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field{display:flex;flex-direction:column;gap:7px;margin:10px 0}
-.field label{font-size:11px;color:var(--muted);letter-spacing:1px}
-.field input,.field select{
-  width:100%;padding:12px;border-radius:9px;
-  border:1px solid var(--border);background:#0b131a;color:var(--text);
-  outline:none
+.navigation button.active{border-color:var(--green);color:var(--green)}
+.card{
+  border:1px solid var(--line);background:#0b151d;
+  border-radius:12px;padding:16px;margin-top:10px
 }
-.field input:focus,.field select:focus{border-color:var(--green)}
-.member{
-  display:flex;align-items:center;gap:12px;
-  padding:13px;margin-top:9px;border:1px solid var(--border);
-  border-radius:11px;background:#0c151d
+.card-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.tag{
+  display:inline-block;padding:6px 9px;border-radius:7px;
+  border:1px solid #43f0a555;color:var(--green);
+  font-size:10px;font-weight:bold
 }
-.member-info{flex:1;min-width:0}
-.member-name{font-weight:bold;overflow-wrap:anywhere}
-.member-rank{font-size:11px;color:var(--muted);margin-top:5px}
-.rank{
-  display:inline-block;padding:7px 10px;border-radius:7px;
-  font-size:11px;font-weight:bold;letter-spacing:1px;
-  background:#35e69a16;color:var(--green);border:1px solid #35e69a45
-}
-.rank.alpha{background:#e5b94c16;color:#e5b94c;border-color:#e5b94c55}
-.rank.beta{background:#b16cff16;color:#b16cff;border-color:#b16cff55}
-.rank.gamma{background:#39c9ed16;color:#39c9ed;border-color:#39c9ed55}
-.rank.delta{background:#35e69a16;color:#35e69a;border-color:#35e69a55}
-.member-actions{display:flex;gap:6px;flex-wrap:wrap}
-.small-action{
-  padding:7px 9px;border:1px solid var(--border);
-  border-radius:7px;background:#14212c;color:var(--text);font-size:11px
-}
-.empty{padding:25px;text-align:center;color:var(--muted);font-size:13px}
-.notice{
-  border:1px solid #e5b94c55;background:#e5b94c0d;
-  border-radius:10px;padding:12px;color:#e5c879;
-  font-size:12px;line-height:1.5;margin-top:12px
-}
-.rank-heading{margin:20px 0 8px;color:var(--muted);font-size:11px;letter-spacing:2px}
-@media(min-width:700px){
-  .grid{grid-template-columns:repeat(4,1fr)}
-  .members-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
-}
-@media(max-width:480px){
-  .form-grid{grid-template-columns:1fr}
-  .member{flex-wrap:wrap}
-  .member-actions{width:100%}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#loading{text-align:center;padding:60px 15px;color:var(--green)}
+footer{text-align:center;color:#60747e;font-size:10px;padding:30px}
+@media(max-width:600px){
+  header{padding:14px}
+  main{padding:24px 14px 50px}
+  .grid{grid-template-columns:1fr}
+  .panel{padding:17px}
 }
 </style>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#080d12">
-  <meta name="description" content="ALSF — Quartier général numérique">
-  <meta name="application-name" content="ALSF">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="ALSF">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./icon.svg">
-  <title>ALSF | Centre de commandement</title>
-
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg:#070c11; --surface:#0d151d; --surface-2:#111e28;
-      --surface-3:#172733; --line:#243744; --line-soft:#1a2a35;
-      --green:#43f0a5; --green-soft:#43f0a51c; --cyan:#45d9f5;
-      --text:#eaf4f7; --muted:#8ca0aa; --gold:#e8c36c;
-      --red:#ff777e; --shadow:0 18px 50px #0008;
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0; min-height:100vh; color:var(--text);
-      background:
-        radial-gradient(ellipse at 12% -12%,#164d3a55,transparent 36%),
-        radial-gradient(ellipse at 95% 8%,#10465a38,transparent 31%),
-        linear-gradient(180deg,#080e14,var(--bg) 55%);
-      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
-      -webkit-font-smoothing:antialiased;
-    }
-    button,input,select{font:inherit}
-    button{cursor:pointer}
-    button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
-    .app-shell{max-width:1440px;margin:auto;min-height:100vh}
-    .topbar{
-      position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
-      gap:16px;padding:13px clamp(16px,3vw,36px);border-bottom:1px solid #29404b99;
-      background:#080e14d9;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)
-    }
-    .brand{display:flex;align-items:center;gap:12px;min-width:0}
-    .brand-logo{
-      width:44px;height:44px;display:grid;place-items:center;flex:none;overflow:hidden;
-      border:1px solid #43f0a577;border-radius:13px;background:linear-gradient(145deg,#12392e,#10212b);
-      box-shadow:0 0 22px #43f0a51a,inset 0 0 18px #43f0a510
-    }
-    .brand-logo img{width:100%;height:100%;object-fit:contain}
-    .brand-fallback{font-weight:950;font-size:12px;letter-spacing:-1px;color:var(--green)}
-    .brand-name{font-weight:900;letter-spacing:3px;font-size:15px}
-    .brand-sub{font-size:9px;letter-spacing:1.8px;color:var(--muted);margin-top:3px}
-    .top-actions{display:flex;align-items:center;gap:12px}
-    .system-state{display:flex;align-items:center;gap:8px;color:#9aecc7;font-size:10px;letter-spacing:1.5px;white-space:nowrap}
-    .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 #43f0a577;animation:pulse 2s infinite}
-    @keyframes pulse{70%{box-shadow:0 0 0 8px #43f0a500}100%{box-shadow:0 0 0 0 #43f0a500}}
-    .install-btn,.primary-btn,.secondary-btn,.danger-btn{
-      border:1px solid #43f0a566;border-radius:11px;padding:10px 14px;color:var(--green);
-      background:linear-gradient(135deg,#43f0a51c,#45d9f50c);font-weight:750;font-size:12px;
-      transition:transform .2s,border-color .2s,background .2s
-    }
-    .install-btn:hover,.primary-btn:hover,.secondary-btn:hover,.danger-btn:hover{transform:translateY(-2px);border-color:var(--green);background:#43f0a526}
-    .layout{display:grid;grid-template-columns:228px minmax(0,1fr);gap:28px;padding:26px clamp(16px,3vw,36px) 42px}
-    .sidebar{position:sticky;top:88px;height:max-content;padding:14px;border:1px solid var(--line-soft);border-radius:var(--radius);background:#0c151dd9}
-    .side-label,.eyebrow{font-size:10px;letter-spacing:2.2px;font-weight:850;color:var(--green);text-transform:uppercase}
-    .side-label{padding:7px 10px 12px;color:#718792}
-    .nav-list{display:grid;gap:6px}
-    .nav-btn{
-      width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:12px;
-      color:var(--muted);border:1px solid transparent;border-radius:11px;background:transparent;
-      font-size:13px;transition:.2s
-    }
-    .nav-btn .nav-icon{width:22px;text-align:center;font-size:17px}
-    .nav-btn:hover{color:var(--text);background:#ffffff08}
-    .nav-btn.active{color:var(--green);border-color:#43f0a52e;background:linear-gradient(100deg,#43f0a51b,#45d9f508);box-shadow:inset 3px 0 var(--green)}
-    .side-foot{margin-top:18px;padding:13px 10px 5px;border-top:1px solid var(--line-soft);font-size:10px;color:#718792;line-height:1.7}
-    main{min-width:0;max-width:1050px;width:100%;margin:auto}
-    .page{animation:pageIn .38s cubic-bezier(.2,.75,.25,1) both}
-    @keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    .page-head{margin:5px 0 22px}
-    h1{font-size:clamp(28px,4vw,43px);line-height:1.08;letter-spacing:-1.5px;margin:9px 0 10px}
-    h2{font-size:16px;margin:0 0 13px;letter-spacing:.1px}
-    h3{font-size:13px;margin:0}
-    p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}
-    .hero{
-      position:relative;isolation:isolate;overflow:hidden;padding:clamp(22px,4vw,38px);
-      border:1px solid #43f0a54a;border-radius:22px;
-      background:linear-gradient(120deg,#102a22f2 0%,#101e27f5 54%,#102330f2 100%);
-      box-shadow:var(--shadow)
-    }
-    .hero:before{content:"";position:absolute;z-index:-1;width:330px;height:330px;right:-100px;top:-170px;border:1px solid #45d9f533;border-radius:50%;box-shadow:0 0 0 28px #45d9f508,0 0 0 58px #45d9f506}
-    .hero:after{content:"ALSF";position:absolute;right:20px;bottom:-35px;z-index:-1;font-size:clamp(80px,15vw,170px);font-weight:1000;letter-spacing:-12px;color:#ffffff06;pointer-events:none}
-    .hero-copy{max-width:620px}
-    .hero .intro{max-width:510px;margin-bottom:20px;font-size:14px}
-    .eyebrow .slash{color:var(--cyan);padding:0 5px}
-    .tag{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #43f0a540;border-radius:7px;background:#43f0a510;color:#9af3c8;font-size:9px;font-weight:850;letter-spacing:1.4px}
-    .tag:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--green)}
-    .section-label{margin:27px 0 12px;color:#82969f;font-size:10px;letter-spacing:2px;font-weight:850;text-transform:uppercase}
-    .dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .module-card,.panel,.stat-card{
-      border:1px solid var(--line);border-radius:var(--radius);
-      background:linear-gradient(145deg,#13222c,#0d161e 78%);
-      box-shadow:0 10px 30px #0002
-    }
-    .module-card{
-      min-height:140px;padding:18px;text-align:left;color:var(--text);
-      transition:transform .22s,border-color .22s,box-shadow .22s;position:relative;overflow:hidden
-    }
-    .module-card:after{content:"";position:absolute;width:90px;height:90px;right:-45px;bottom:-45px;border:1px solid #45d9f522;border-radius:50%;transition:transform .3s}
-    .module-card:hover{transform:translateY(-4px);border-color:#43f0a577;box-shadow:0 16px 34px #0005,0 0 25px #43f0a50c}
-    .module-card:hover:after{transform:scale(1.5)}
-    .module-icon{font-size:24px;margin-bottom:15px}
-    .module-title{font-size:14px;font-weight:850}
-    .module-desc{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.5}
-    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-    .stat-card{padding:15px}
-    .stat-value{font-size:25px;font-weight:900;letter-spacing:-1px;color:var(--green)}
-    .stat-label{font-size:9px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-top:5px}
-    .panel{padding:19px;margin-top:14px}
-    .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-    .panel-head h2{margin:0}
-    .panel-note{font-size:10px;color:var(--muted)}
-    .field{display:flex;flex-direction:column;gap:7px;margin:11px 0}
-    .field label{font-size:10px;color:#9aadb5;letter-spacing:1.1px;font-weight:800}
-    .field input,.field select{
-      width:100%;min-height:43px;padding:11px 12px;border:1px solid var(--line);
-      border-radius:10px;background:#091119;color:var(--text);outline:none
-    }
-    .field input:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px #43f0a512}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .primary-btn{margin-top:8px}
-    .secondary-btn{border-color:var(--line);background:#172630;color:#c5d6dc}
-    .danger-btn{border-color:#ff777e55;background:#ff777e12;color:#ff9ba0}
-    .member{
-      display:flex;align-items:center;gap:12px;padding:13px;margin-top:9px;
-      border:1px solid var(--line-soft);border-radius:12px;background:#0a141c;
-      animation:memberIn .25s ease both
-    }
-    @keyframes memberIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-    .member-info{flex:1;min-width:0}
-    .member-name{font-weight:800;overflow-wrap:anywhere;font-size:13px}
-    .member-rank{font-size:10px;color:var(--muted);margin-top:4px}
-    .rank{display:inline-flex;align-items:center;padding:7px 9px;border:1px solid #43f0a544;border-radius:7px;background:#43f0a512;color:var(--green);font-size:10px;font-weight:900;letter-spacing:.7px;white-space:nowrap}
-    .rank.alpha{background:#e8c36c12;color:var(--gold);border-color:#e8c36c55}
-    .rank.beta{background:#bd8aff12;color:#c99aff;border-color:#bd8aff55}
-    .rank.gamma{background:#45d9f512;color:var(--cyan);border-color:#45d9f555}
-    .rank.delta{background:#43f0a512;color:var(--green);border-color:#43f0a555}
-    .member-actions{display:flex;gap:6px;flex-wrap:wrap}
-    .small-action{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#14232d;color:#b8cbd2;font-size:10px}
-    .small-action:hover{border-color:var(--cyan);color:var(--cyan)}
-    .empty{padding:20px;text-align:center;color:#718792;font-size:12px;border:1px dashed var(--line);border-radius:12px;margin-top:10px}
-    .rank-heading{margin:20px 0 8px;color:var(--green);font-size:11px;font-weight:900;letter-spacing:1.5px}
-    .hidden{display:none!important}
-    .notice{padding:13px;border:1px solid #45d9f533;border-radius:11px;background:#45d9f50b;color:#a8dce6;font-size:11px;line-height:1.6}
-    .modal-backdrop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;background:#000b;backdrop-filter:blur(8px)}
-    .modal{width:min(100%,430px);padding:22px;border:1px solid var(--line);border-radius:18px;background:#101c25;box-shadow:var(--shadow)}
-    .modal h2{margin:10px 0}
-    .modal-actions{display:flex;justify-content:flex-end;margin-top:18px}
-    .mobile-nav{display:none}
-    @media(max-width:850px){
-      .layout{grid-template-columns:1fr;gap:16px;padding-top:18px}
-      .sidebar{position:static;padding:8px}
-      .side-label,.side-foot{display:none}
-      .nav-list{display:flex;overflow-x:auto;gap:5px}
-      .nav-btn{width:auto;flex:none;padding:10px 12px}
-      .nav-btn .nav-icon{width:auto}
-      main{max-width:none}
-    }
-    @media(max-width:560px){
-      .topbar{padding:10px 14px}
-      .brand-logo{width:38px;height:38px}
-      .brand-name{font-size:13px}
-      .brand-sub{font-size:8px}
-      .system-state{display:none}
-      .layout{padding:13px 13px 30px}
-      .dashboard-grid{grid-template-columns:1fr}
-      .stats{gap:7px}
-      .stat-card{padding:11px}
-      .stat-value{font-size:21px}
-      .stat-label{font-size:8px}
-      .panel{padding:14px}
-      .form-grid{grid-template-columns:1fr}
-      .member{align-items:flex-start;flex-wrap:wrap}
-      .member-actions{width:100%;padding-left:0}
-      .rank{margin-left:auto}
-      .nav-btn{font-size:11px;padding:9px}
-    }
-    @media(prefers-reduced-motion:reduce){
-      *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
-    }
-  </style>
 </head>
-
 <body>
-<header class="header">
-  <div class="brand">
-    <div class="logo">ALSF</div>
-    <div>
-      <div class="brand-name">ALSF</div>
-      <div class="brand-sub">CENTRE DE COMMANDEMENT</div>
-    </div>
-  </div>
-  <div class="status"><span class="dot"></span>SYSTÈME ACTIF</div>
+
+<header>
+  <div class="logo">LSF<small>CENTRE DE COMMANDEMENT</small></div>
+  <div class="status" id="connectionStatus">CONNEXION...</div>
 </header>
 
 <main>
-<section id="home">
-  <div class="hero">
-    <div class="hero-content">
-      <div class="eyebrow">ALSF / QUARTIER GÉNÉRAL</div>
-      <h1>Bienvenue au QG.</h1>
-      <p class="intro">Centre de coordination et de communication de l'Alliance.</p>
-      <span class="tag">INTERFACE OPÉRATIONNELLE</span>
-<div class="app-shell">
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-logo">
-        <img src="./icon.svg" alt="ALSF" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-        <span class="brand-fallback" style="display:none">ALSF</span>
-      </div>
-      <div>
-        <div class="brand-name">ALSF</div>
-        <div class="brand-sub">CENTRE DE COMMANDEMENT</div>
-      </div>
-    </div>
-  </div>
-  <div class="section-title">Navigation principale</div>
-  <div class="grid">
-    <button class="card" onclick="showPage('map')">
-      <div class="card-icon">🗺️</div>
-      <div class="card-title">Carte</div>
-      <div class="card-desc">Carte interactive et lieux de rendez-vous.</div>
-    </button>
-    <button class="card" onclick="showPage('chat')">
-      <div class="card-icon">💬</div>
-      <div class="card-title">Communications</div>
-      <div class="card-desc">Salons et conversations privées.</div>
-    </button>
-    <button class="card" onclick="showPage('members')">
-      <div class="card-icon">👥</div>
-      <div class="card-title">Effectifs</div>
-      <div class="card-desc">Membres et classement ALSF.</div>
-    </button>
-    <button class="card" onclick="showPage('admin')">
-      <div class="card-icon">🛡️</div>
-      <div class="card-title">Administration</div>
-      <div class="card-desc">Gestion de l'organisation.</div>
-    </button>
-  </div>
-  <div class="section-title">Informations système</div>
-  <div class="panel">
-    <span class="tag">VERSION 0.2</span>
-    <p>Le classement ALSF est en cours de mise en place. Les données de cette version sont enregistrées localement sur cet appareil.</p>
-  </div>
-</section>
+  <div id="loading">INITIALISATION DU SYSTÈME...</div>
 
-<section id="map" class="hidden">
-  <div class="eyebrow">LOCALISATION</div>
-  <h1>Carte</h1>
-  <p class="intro">Zone principale : Férolles-Attilly et ses environs.</p>
-  <div class="map-placeholder">
-    <div>
-      <div style="font-size:35px">🗺️</div>
-      <strong>Carte ALSF</strong>
-      <p>La carte interactive sera connectée prochainement.</p>
-    <div class="top-actions">
-      <div class="system-state"><span class="pulse"></span>SYSTÈME ACTIF</div>
-      <button id="installButton" class="install-btn hidden" type="button">Installer ALSF</button>
-    </div>
-  </div>
-</section>
+  <!-- CANDIDATURE -->
+  <section id="applicationScreen" class="hidden">
+    <div class="eyebrow">RECRUTEMENT / LSF</div>
+    <h1>Rejoindre LSF.</h1>
+    <p>Avant d'accéder au quartier général, tu dois soumettre une candidature. Elle sera examinée par un administrateur.</p>
 
-<section id="chat" class="hidden">
-  <div class="eyebrow">COMMUNICATIONS</div>
-  <h1>Messagerie</h1>
-  <div class="panel">
-    <strong># Général</strong>
-    <p>Salon de discussion de l'ALSF.</p>
-    <span class="tag">EN PRÉPARATION</span>
-  </div>
-  <div class="panel">
-    <strong># Annonces</strong>
-    <p>Informations officielles de l'organisation.</p>
-  </div>
-  <div class="panel">
-    <strong>Messages privés</strong>
-    <p>Conversations individuelles entre membres.</p>
-  </div>
-</section>
-  </header>
+    <div class="panel">
+      <h2>Formulaire de candidature</h2>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="side-label">NAVIGATION PRINCIPALE</div>
-      <nav class="nav-list">
-        <button class="nav-btn active" data-page="home" onclick="showPage('home')"><span class="nav-icon">⌂</span>Tableau de bord</button>
-        <button class="nav-btn" data-page="map" onclick="showPage('map')"><span class="nav-icon">⌖</span>Carte</button>
-        <button class="nav-btn" data-page="chat" onclick="showPage('chat')"><span class="nav-icon">▤</span>Communications</button>
-        <button class="nav-btn" data-page="members" onclick="showPage('members')"><span class="nav-icon">♙</span>Effectifs</button>
-        <button class="nav-btn" data-page="admin" onclick="showPage('admin')"><span class="nav-icon">⚙</span>Administration</button>
-      </nav>
-      <div class="side-foot">ALSF // ACCÈS INTERNE<br>INTERFACE DE COMMANDEMENT</div>
-    </aside>
-
-    <main>
-      <section id="home" class="page">
-        <div class="page-head">
-          <div class="eyebrow">ALSF <span class="slash">/</span> QG NUMÉRIQUE</div>
-          <h1>Centre de commandement</h1>
-          <p>Bienvenue dans l'interface centrale de l'Alliance.</p>
+      <form id="applicationForm">
+        <div class="field">
+          <label for="applicantName">NOM OU PSEUDONYME</label>
+          <input id="applicantName" maxlength="30"
+            minlength="2" required placeholder="Ton nom ou pseudonyme">
         </div>
 
-<section id="members" class="hidden">
-  <div class="eyebrow">PERSONNEL</div>
-  <h1>Effectifs</h1>
-  <p class="intro">Classement officiel des membres de l'ALSF.</p>
-        <div class="hero">
-          <div class="hero-copy">
-            <span class="tag">QUARTIER GÉNÉRAL EN LIGNE</span>
-            <h1>Une Alliance.<br>Une seule direction.</h1>
-            <p class="intro">Retrouve les informations essentielles, consulte les effectifs et accède aux différents modules de l'ALSF depuis un seul espace.</p>
-            <button class="primary-btn" onclick="showPage('members')">Consulter les effectifs ↗</button>
-          </div>
+        <div class="field">
+          <label for="motivation">POURQUOI SOUHAITES-TU REJOINDRE LSF ?</label>
+          <textarea id="motivation" minlength="10" maxlength="2000"
+            required placeholder="Présente-toi et explique tes motivations..."></textarea>
         </div>
 
-  <div class="panel">
-    <h2>Classement général</h2>
-    <p>ALPHA est le rang le plus élevé. DELTA est le rang le plus bas. Le numéro 1 est le meilleur de chaque catégorie.</p>
-    <div id="rankList"></div>
-  </div>
-        <div class="section-label">APERÇU DES EFFECTIFS</div>
-        <div class="stats">
-          <div class="stat-card"><div class="stat-value" id="totalMembers">0</div><div class="stat-label">Membres enregistrés</div></div>
-          <div class="stat-card"><div class="stat-value" id="alphaMembers">0</div><div class="stat-label">Membres ALPHA</div></div>
-          <div class="stat-card"><div class="stat-value" id="deltaMembers">0</div><div class="stat-label">Membres DELTA</div></div>
-        </div>
-
-  <div class="panel">
-    <h2>Ajouter un membre</h2>
-    <div class="field">
-      <label for="memberName">PSEUDO DU MEMBRE</label>
-      <input id="memberName" maxlength="30" placeholder="Ex : Aedan">
+        <button class="action" id="submitApplication" type="submit">
+          Envoyer ma candidature
+        </button>
+        <div class="message" id="applicationMessage"></div>
+      </form>
     </div>
-    <div class="form-grid">
-      <div class="field">
-        <label for="memberCategory">CATÉGORIE</label>
-        <select id="memberCategory">
-          <option value="ALPHA">ALPHA</option>
-          <option value="BETA">BÊTA</option>
-          <option value="GAMMA">GAMMA</option>
-          <option value="DELTA">DELTA</option>
-        </select>
+  </section>
+
+  <!-- ATTENTE / REFUS -->
+  <section id="waitingScreen" class="hidden">
+    <div class="eyebrow">RECRUTEMENT / SUIVI</div>
+    <h1 id="waitingTitle">Candidature envoyée.</h1>
+    <div class="panel">
+      <p id="waitingDescription"></p>
+      <span class="tag" id="applicationStatus"></span>
+    </div>
+  </section>
+
+  <!-- ESPACE MEMBRE -->
+  <section id="memberScreen" class="hidden">
+    <div class="eyebrow">RÉSEAU INTERNE / LSF</div>
+    <h1>Bienvenue au QG.</h1>
+    <p>Accès autorisé. Voici ton espace personnel.</p>
+
+    <div class="navigation" id="memberNavigation">
+      <button class="active" data-page="home">Accueil</button>
+      <button data-page="map">Carte</button>
+      <button data-page="chat">Communications</button>
+      <button data-page="members">Effectifs</button>
+      <button data-page="admin" class="hidden" id="adminNav">Administration</button>
+      <button data-page="cv" class="hidden" id="cvNav">CV</button>
+    </div>
+
+    <div id="homePage" class="memberPage">
+      <div class="panel">
+        <div class="eyebrow">IDENTIFICATION</div>
+        <h2 id="memberNameDisplay">Membre LSF</h2>
+        <span class="tag" id="memberGradeDisplay">GRADE</span>
+        <p id="memberRoleDisplay"></p>
       </div>
-      <div class="field">
-        <label for="memberNumber">NUMÉRO</label>
-        <input id="memberNumber" type="number" min="1" step="1" placeholder="Ex : 1">
+      <div class="grid">
+        <div class="panel">
+          <h2>Carte</h2>
+          <p>Accéder au module cartographique.</p>
+          <button class="action" data-goto="map">Ouvrir</button>
+        </div>
+        <div class="panel">
+          <h2>Communications</h2>
+          <p>Accéder aux communications internes.</p>
+          <button class="action" data-goto="chat">Ouvrir</button>
+        </div>
       </div>
     </div>
-    <button class="action" onclick="addMember()">＋ Ajouter au classement</button>
-    <div id="formMessage" aria-live="polite"></div>
-  </div>
-        <div class="section-label">MODULES DISPONIBLES</div>
-        <div class="dashboard-grid">
-          <button class="module-card" onclick="showPage('map')"><div class="module-icon">⌖</div><div class="module-title">Carte stratégique</div><div class="module-desc">Espace réservé à la future carte des opérations.</div></button>
-          <button class="module-card" onclick="showPage('chat')"><div class="module-icon">▤</div><div class="module-title">Communications</div><div class="module-desc">Espace réservé aux futures communications internes.</div></button>
-          <button class="module-card" onclick="showPage('members')"><div class="module-icon">♙</div><div class="module-title">Gestion des effectifs</div><div class="module-desc">Consulter et gérer les grades des membres.</div></button>
-          <button class="module-card" onclick="showPage('admin')"><div class="module-icon">⚙</div><div class="module-title">Administration</div><div class="module-desc">Informations et paramètres de l'interface.</div></button>
-        </div>
-      </section>
 
-  <div class="panel">
-    <h2>Annuaire des membres</h2>
-    <div id="memberList"></div>
-  </div>
-  <div class="notice">
-    Version locale de test : les membres et les grades sont enregistrés uniquement dans ce navigateur. La gestion des droits administrateur et la synchronisation entre appareils seront ajoutées séparément.
-      <section id="map" class="page hidden">
-        <div class="page-head">
-          <div class="eyebrow">ALSF <span class="slash">/</span> GÉOGRAPHIE</div>
-          <h1>Carte stratégique</h1>
-          <p>Centre de visualisation géographique.</p>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h2>Module cartographique</h2><span class="panel-note">EN PRÉPARATION</span></div>
-          <div class="notice">La carte stratégique sera intégrée dans une prochaine version. Aucun emplacement ni aucune donnée opérationnelle n'est encore enregistré ici.</div>
-        </div>
-      </section>
+    <div id="mapPage" class="memberPage hidden">
+      <div class="eyebrow">LOCALISATION</div>
+      <h1>Carte</h1>
+      <div class="panel">
+        <p>Le module cartographique sera développé dans une prochaine étape.</p>
+        <span class="tag">MODULE EN PRÉPARATION</span>
+      </div>
+    </div>
 
-      <section id="chat" class="page hidden">
-        <div class="page-head">
-          <div class="eyebrow">ALSF <span class="slash">/</span> RÉSEAU</div>
-          <h1>Communications</h1>
-          <p>Centre de communication interne.</p>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h2>Réseau de communication</h2><span class="panel-note">EN PRÉPARATION</span></div>
-          <div class="notice">Le système de messagerie n'est pas encore connecté. Une base de données et un service serveur seront nécessaires pour permettre aux membres de communiquer entre différents appareils.</div>
-        </div>
-      </section>
+    <div id="chatPage" class="memberPage hidden">
+      <div class="eyebrow">RÉSEAU INTERNE</div>
+      <h1>Communications</h1>
+      <div class="panel">
+        <h2>Général</h2>
+        <p>Le système de messagerie sera connecté dans une prochaine étape.</p>
+        <span class="tag">MODULE EN PRÉPARATION</span>
+      </div>
+    </div>
 
-      <section id="members" class="page hidden">
-        <div class="page-head">
-          <div class="eyebrow">ALSF <span class="slash">/</span> PERSONNEL</div>
-          <h1>Gestion des effectifs</h1>
-          <p>Annuaire interne et organisation hiérarchique de l'Alliance.</p>
-        </div>
+    <div id="membersPage" class="memberPage hidden">
+      <div class="eyebrow">PERSONNEL</div>
+      <h1>Effectifs</h1>
+      <div class="panel">
+        <p>L'annuaire complet sera développé dans une prochaine étape.</p>
+      </div>
+    </div>
 
-        <div class="panel">
-          <div class="panel-head"><h2>Ajouter un membre</h2><span class="panel-note">NOUVELLE INSCRIPTION</span></div>
-          <div class="field">
-            <label for="memberName">PSEUDO DU MEMBRE</label>
-            <input id="memberName" type="text" maxlength="40" placeholder="Nom ou pseudonyme">
-          </div>
-          <div class="form-grid">
-            <div class="field">
-              <label for="memberCategory">CATÉGORIE</label>
-              <select id="memberCategory">
-                <option value="ALPHA">ALPHA</option>
-                <option value="BETA">BÊTA</option>
-                <option value="GAMMA">GAMMA</option>
-                <option value="DELTA">DELTA</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="memberNumber">NUMÉRO DU GRADE</label>
-              <input id="memberNumber" type="number" min="1" step="1" placeholder="Ex : 1">
-            </div>
-          </div>
-          <button class="primary-btn" onclick="addMember()">+ Ajouter le membre</button>
-          <p id="formMessage" role="status" aria-live="polite" style="margin-top:12px"></p>
-        </div>
+    <!-- ADMINISTRATION -->
+    <div id="adminPage" class="memberPage hidden">
+      <div class="eyebrow">CONTRÔLE CENTRAL</div>
+      <h1>Administration</h1>
+      <div class="panel">
+        <h2>Gestion de l'organisation</h2>
+        <p>Ton compte dispose des droits d'administration.</p>
+        <span class="tag">ACCÈS ADMINISTRATEUR</span>
+      </div>
+    </div>
 
-        <div class="panel">
-          <div class="panel-head"><h2>Annuaire des membres</h2><span class="panel-note" id="directoryCount">0 membre</span></div>
-          <div id="memberList"></div>
-        </div>
+    <!-- CV -->
+    <div id="cvPage" class="memberPage hidden">
+      <div class="eyebrow">RECRUTEMENT / ADMINISTRATION</div>
+      <h1>Candidatures</h1>
+      <p>Examine les dossiers et décide de leur admission.</p>
+      <div id="applicationsList">
+        <div class="card">Chargement des candidatures...</div>
+      </div>
+    </div>
 
-        <div class="panel">
-          <div class="panel-head"><h2>Hiérarchie ALSF</h2><span class="panel-note">DU PLUS ÉLEVÉ AU PLUS BAS</span></div>
-          <div id="rankList"></div>
-        </div>
-      </section>
-
-      <section id="admin" class="page hidden">
-        <div class="page-head">
-          <div class="eyebrow">ALSF <span class="slash">/</span> CONTRÔLE</div>
-          <h1>Administration</h1>
-          <p>Informations techniques et paramètres de l'interface.</p>
-        </div>
-        <div class="panel">
-          <h2>État de l'application</h2>
-          <div class="notice">Interface ALSF active. Les données des effectifs sont actuellement enregistrées dans le stockage local de ce navigateur.</div>
-        </div>
-        <div class="panel">
-          <h2>Hiérarchie actuelle</h2>
-          <p>ALPHA est la catégorie la plus élevée, suivie de BÊTA, GAMMA et DELTA. Dans chaque catégorie, le numéro 1 est le rang le plus élevé. Chaque rang précis ne peut être occupé que par un seul membre.</p>
-        </div>
-        <div class="panel">
-          <h2>Stockage des données</h2>
-          <p>Cette version utilise le stockage local du navigateur. Les données ne sont donc pas automatiquement partagées entre plusieurs appareils ou plusieurs utilisateurs. Une future synchronisation nécessitera un serveur ou une base de données.</p>
-        </div>
-      </section>
-    </main>
-  </div>
-</section>
-
-<section id="admin" class="hidden">
-  <div class="eyebrow">GESTION</div>
-  <h1>Administration</h1>
-  <div class="panel">
-    <strong>Gestion de l'ALSF</strong>
-    <p>Le système de classement est disponible dans la rubrique Effectifs. Les invitations, les permissions et les exclusions seront développées dans les prochaines étapes.</p>
-    <span class="tag">MODULE EN CONSTRUCTION</span>
-    <button class="action" onclick="showPage('members')">Ouvrir le classement</button>
-</div>
-
-<div id="installHelp" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="installHelpTitle">
-  <div class="modal">
-    <div class="eyebrow">INSTALLATION ALSF</div>
-    <h2 id="installHelpTitle">Ajouter ALSF à l'écran d'accueil</h2>
-    <p id="installHelpText">Ouvre le menu de ton navigateur puis choisis « Ajouter à l'écran d'accueil » ou « Installer l'application ».</p>
-    <div class="modal-actions"><button class="secondary-btn" onclick="closeInstallHelp()">Fermer</button></div>
-  </div>
-</section>
+    <div class="panel">
+      <button class="action secondary" id="signOutButton">Se déconnecter</button>
+    </div>
+  </section>
 </main>
 
-<nav class="nav">
-  <button class="active" data-page="home" onclick="showPage('home')"><span>⌂</span>Accueil</button>
-  <button data-page="map" onclick="showPage('map')"><span>⌖</span>Carte</button>
-  <button data-page="chat" onclick="showPage('chat')"><span>▤</span>Chat</button>
-  <button data-page="members" onclick="showPage('members')"><span>♙</span>Membres</button>
-</nav>
-</div>
+<footer>LSF · CENTRE DE COMMANDEMENT</footer>
 
 <script>
 "use strict";
 
-const STORAGE_KEY = "alsf_members_v1";
-const CATEGORY_ORDER = ["ALPHA","BETA","GAMMA","DELTA"];
-const CATEGORY_LABELS = {
-  ALPHA:"ALPHA",
-  BETA:"BÊTA",
-  GAMMA:"GAMMA",
-  DELTA:"DELTA"
-};
-const CATEGORY_ORDER = ["ALPHA", "BETA", "GAMMA", "DELTA"];
-const CATEGORY_LABELS = { ALPHA:"ALPHA", BETA:"BÊTA", GAMMA:"GAMMA", DELTA:"DELTA" };
+/* ========================================
+   CONFIGURATION SUPABASE
+======================================== */
 
-let members = loadMembers();
-let deferredInstallPrompt = null;
+const SUPABASE_URL = "https://vmvmvqnhglnthifxkajo.supabase.co";
+const SUPABASE_KEY = "sb_publishable_K1a5f8DU7-HijfRB4UiDSQ_uD_eB230";
 
-function loadMembers(){
-  try{
-function loadMembers() {
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentUser = null;
+let currentMember = null;
+let currentApplication = null;
+
+/* ========================================
+   OUTILS D'AFFICHAGE
+======================================== */
+
+const $ = id => document.getElementById(id);
+
+function showScreen(id) {
+  ["loading","applicationScreen","waitingScreen","memberScreen"]
+    .forEach(screen => $(screen).classList.add("hidden"));
+  $(id).classList.remove("hidden");
+}
+
+function setMessage(id, message, type="") {
+  const target = $(id);
+  target.textContent = message;
+  target.className = "message " + type;
+}
+
+function gradeText(member) {
+  return member.grade_category + " " + member.grade_number;
+}
+
+/* ========================================
+   INITIALISATION ET AUTHENTIFICATION
+======================================== */
+
+async function initialize() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(saved) ? saved : [];
-  }catch(error){
-    return Array.isArray(saved) ? saved.filter(isValidMember) : [];
+    let { data: { session }, error } = await db.auth.getSession();
+    if (error) throw error;
+
+    if (!session) {
+      const result = await db.auth.signInAnonymously();
+      if (result.error) throw result.error;
+      session = result.data.session;
+    }
+
+    currentUser = session.user;
+    $("connectionStatus").textContent = "SYSTÈME CONNECTÉ";
+
+    await loadUserState();
+
   } catch (error) {
-    console.error("Lecture des membres impossible :", error);
-    return [];
+    console.error(error);
+    $("connectionStatus").textContent = "ERREUR";
+    showScreen("applicationScreen");
+    $("applicationForm").classList.add("hidden");
+    setMessage(
+      "applicationMessage",
+      "Impossible de se connecter à LSF : " + error.message,
+      "error"
+    );
   }
 }
 
-function saveMembers(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-function isValidMember(member) {
-  return member && typeof member.name === "string" &&
-    CATEGORY_ORDER.includes(member.category) &&
-    Number.isInteger(Number(member.number)) && Number(member.number) > 0;
+/* ========================================
+   ÉTAT DU COMPTE
+======================================== */
+
+async function loadUserState() {
+  showScreen("loading");
+
+  const memberResult = await db
+    .from("alsf_members")
+    .select("user_id,member_name,grade_category,grade_number,system_role,is_active")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  if (memberResult.error) throw memberResult.error;
+
+  currentMember = memberResult.data;
+
+  if (currentMember && currentMember.is_active) {
+    await showMemberSpace();
+    return;
+  }
+
+  const applicationResult = await db
+    .from("lsf_applications")
+    .select("*")
+    .eq("applicant_id", currentUser.id)
+    .maybeSingle();
+
+  if (applicationResult.error) throw applicationResult.error;
+
+  currentApplication = applicationResult.data;
+
+  if (!currentApplication) {
+    showScreen("applicationScreen");
+  } else if (currentApplication.status === "pending") {
+    showWaitingScreen("pending");
+  } else if (currentApplication.status === "refused") {
+    showWaitingScreen("refused");
+  } else {
+    showScreen("waitingScreen");
+    $("waitingTitle").textContent = "Candidature acceptée";
+    $("waitingDescription").textContent =
+      "Ta candidature a été acceptée. Si ton accès n'apparaît pas, contacte un administrateur.";
+  }
 }
 
-function showPage(page){
-  document.querySelectorAll("main section").forEach(section=>{
-    section.classList.add("hidden");
+/* ========================================
+   ENVOI DU CV
+======================================== */
+
+$("applicationForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const name = $("applicantName").value.trim();
+  const motivation = $("motivation").value.trim();
+
+  if (name.length < 2 || motivation.length < 10) {
+    setMessage("applicationMessage",
+      "Vérifie les informations saisies.", "error");
+    return;
+  }
+
+  const button = $("submitApplication");
+  button.disabled = true;
+  button.textContent = "ENVOI EN COURS...";
+
+  try {
+    const { error } = await db
+      .from("lsf_applications")
+      .insert({
+        applicant_id: currentUser.id,
+        applicant_name: name,
+        motivation: motivation
+      });
+
+    if (error) throw error;
+
+    const result = await db
+      .from("lsf_applications")
+      .select("*")
+      .eq("applicant_id", currentUser.id)
+      .single();
+
+    if (result.error) throw result.error;
+
+    currentApplication = result.data;
+    showWaitingScreen("pending");
+
+  } catch (error) {
+    console.error(error);
+    setMessage("applicationMessage",
+      "Erreur lors de l'envoi : " + error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Envoyer ma candidature";
+  }
+});
+
+function showWaitingScreen(status) {
+  showScreen("waitingScreen");
+
+  if (status === "pending") {
+    $("waitingTitle").textContent = "Candidature envoyée.";
+    $("waitingDescription").textContent =
+      "Ton dossier est bien enregistré. Un administrateur LSF doit maintenant examiner ta candidature.";
+    $("applicationStatus").textContent = "EN ATTENTE";
+  } else {
+    $("waitingTitle").textContent = "Candidature refusée.";
+    $("waitingDescription").textContent =
+      "Ta candidature n'a pas été retenue. Contacte un administrateur LSF pour obtenir davantage d'informations.";
+    $("applicationStatus").textContent = "REFUSÉE";
+  }
+}
+
+/* ========================================
+   ESPACE MEMBRE
+======================================== */
+
+async function showMemberSpace() {
+  showScreen("memberScreen");
+
+  $("memberNameDisplay").textContent = currentMember.member_name;
+  $("memberGradeDisplay").textContent = gradeText(currentMember);
+
+  const isAdmin = ["admin","developer"].includes(currentMember.system_role);
+
+  $("memberRoleDisplay").textContent =
+    isAdmin ? "Droits d'administration activés." : "Membre de LSF.";
+
+  $("adminNav").classList.toggle("hidden", !isAdmin);
+  $("cvNav").classList.toggle("hidden", !isAdmin);
+
+  if (isAdmin) {
+    await loadApplications();
+  }
+
+  showMemberPage("home");
+}
+
+function showMemberPage(page) {
+  document.querySelectorAll(".memberPage").forEach(element => {
+    element.classList.add("hidden");
   });
-function saveMembers() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-    return true;
-  } catch (error) {
-    console.error("Sauvegarde impossible :", error);
-    showMessage("La sauvegarde locale a échoué. Vérifie l'espace disponible du navigateur.", "error");
-    return false;
-  }
-}
 
-function showPage(page) {
-  const selected = document.getElementById(page);
-  if(selected) selected.classList.remove("hidden");
+  const selected = $(page + "Page");
   if (!selected) return;
 
-  document.querySelectorAll("main > section").forEach(section => section.classList.add("hidden"));
   selected.classList.remove("hidden");
-  selected.style.animation = "none";
-  void selected.offsetWidth;
-  selected.style.animation = "";
 
-  document.querySelectorAll(".nav button").forEach(button=>{
-    button.classList.toggle("active",button.dataset.page===page);
-  document.querySelectorAll("[data-page]").forEach(button => {
+  document.querySelectorAll("#memberNavigation button").forEach(button => {
     button.classList.toggle("active", button.dataset.page === page);
   });
-  window.scrollTo(0,0);
-  if(page==="members") renderMembers();
 
-  window.scrollTo({top:0, behavior:"smooth"});
-
-  if (page === "members") renderMembers();
-  if (page === "home") renderStats();
+  if (page === "cv") loadApplications();
 }
 
-function getRankNumber(member){
-function getRankNumber(member) {
-  return Number(member.number);
-}
-
-function compareMembers(a,b){
-  const categoryDifference =
-    CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
-  if(categoryDifference !== 0) return categoryDifference;
-  return getRankNumber(a)-getRankNumber(b);
-function compareMembers(a, b) {
-  const categoryDifference = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
-  return categoryDifference || getRankNumber(a) - getRankNumber(b);
-}
-
-function rankClass(category){
-function rankClass(category) {
-  return category.toLowerCase();
-}
-
-function formatRank(member){
-function formatRank(member) {
-  return CATEGORY_LABELS[member.category] + " " + member.number;
-}
-
-function renderMembers(){
-function renderStats() {
-  document.getElementById("totalMembers").textContent = members.length;
-  document.getElementById("alphaMembers").textContent = members.filter(m => m.category === "ALPHA").length;
-  document.getElementById("deltaMembers").textContent = members.filter(m => m.category === "DELTA").length;
-}
-
-function renderMembers() {
-  const sorted = [...members].sort(compareMembers);
-  const list = document.getElementById("memberList");
-  const rankList = document.getElementById("rankList");
-
-  if(sorted.length===0){
-    list.innerHTML='<div class="empty">Aucun membre enregistré pour le moment.</div>';
-  }else{
-    list.innerHTML=sorted.map(member=>`
-  document.getElementById("directoryCount").textContent = `${sorted.length} membre${sorted.length > 1 ? "s" : ""}`;
-
-  if (!sorted.length) {
-    list.innerHTML = '<div class="empty">Aucun membre enregistré pour le moment.</div>';
-  } else {
-    list.innerHTML = sorted.map(member => `
-      <div class="member">
-        <div class="member-info">
-          <div class="member-name">${escapeHTML(member.name)}</div>
-          <div class="member-rank">Position dans le classement</div>
-          <div class="member-rank">Membre de l'Alliance</div>
-        </div>
-        <span class="rank ${rankClass(member.category)}">${formatRank(member)}</span>
-        <div class="member-actions">
-          <button class="small-action" onclick="editMember('${member.id}')">Modifier</button>
-          <button class="small-action" onclick="deleteMember('${member.id}')">Supprimer</button>
-          <button class="small-action" onclick="editMember('${escapeAttribute(member.id)}')">Modifier</button>
-          <button class="small-action" onclick="deleteMember('${escapeAttribute(member.id)}')">Supprimer</button>
-        </div>
-      </div>
-    `).join("");
-      </div>`).join("");
-  }
-
-  const categories = CATEGORY_ORDER.map(category=>{
-    const group=sorted.filter(member=>member.category===category);
-    return `
-      <div class="rank-heading">${CATEGORY_LABELS[category]}</div>
-      ${group.length ? group.map(member=>`
-  rankList.innerHTML = CATEGORY_ORDER.map(category => {
-    const group = sorted.filter(member => member.category === category);
-
-    return `<div class="rank-heading">${CATEGORY_LABELS[category]}</div>` +
-      (group.length ? group.map(member => `
-        <div class="member">
-          <div class="member-info">${escapeHTML(member.name)}</div>
-          <div class="member-info"><div class="member-name">${escapeHTML(member.name)}</div></div>
-          <span class="rank ${rankClass(category)}">${formatRank(member)}</span>
-        </div>
-      `).join("") : '<div class="empty">Aucun membre dans cette catégorie.</div>'}
-    `;
-        </div>`).join("") : '<div class="empty">Aucun membre dans cette catégorie.</div>');
-  }).join("");
-
-  rankList.innerHTML=categories;
-  renderStats();
-}
-
-function addMember(){
-  const nameInput=document.getElementById("memberName");
-  const categoryInput=document.getElementById("memberCategory");
-  const numberInput=document.getElementById("memberNumber");
-  const message=document.getElementById("formMessage");
-function addMember() {
-  const nameInput = document.getElementById("memberName");
-  const category = document.getElementById("memberCategory").value;
-  const number = Number(document.getElementById("memberNumber").value);
-  const name = nameInput.value.trim();
-
-  const name=nameInput.value.trim();
-  const category=categoryInput.value;
-  const number=Number(numberInput.value);
-  if (!name) return showMessage("Entre un pseudo pour le membre.", "error");
-
-  if(!name){
-    showMessage("Entre un pseudo pour le membre.","error");
-    return;
-  }
-  if(!Number.isInteger(number)||number<1){
-    showMessage("Le numéro doit être un entier supérieur ou égal à 1.","error");
-    return;
-  }
-  if (!Number.isSafeInteger(number) || number < 1)
-    return showMessage("Le numéro doit être un entier supérieur ou égal à 1.", "error");
-
-  if (members.some(member => member.category === category && Number(member.number) === number))
-    return showMessage("Ce rang est déjà occupé par un autre membre.", "error");
-
-  const occupied=members.some(member=>
-    member.category===category && Number(member.number)===number
-  );
-  if(occupied){
-    showMessage("Ce rang est déjà occupé par un autre membre.","error");
-  members.push({id:makeId(), name, category, number});
-
-  if (!saveMembers()) {
-    members.pop();
-    return;
-  }
-
-  members.push({
-    id:makeId(),
-    name,
-    category,
-    number
+document.querySelectorAll("#memberNavigation button").forEach(button => {
+  button.addEventListener("click", () => {
+    if (button.classList.contains("hidden")) return;
+    showMemberPage(button.dataset.page);
   });
-  saveMembers();
-  nameInput.value="";
-  numberInput.value="";
-  showMessage("Membre ajouté au classement ALSF.","success");
-  nameInput.value = "";
-  document.getElementById("memberNumber").value = "";
-
-  showMessage("Membre ajouté au classement ALSF.", "success");
-  renderMembers();
-}
-
-function editMember(id){
-  const member=members.find(item=>item.id===id);
-  if(!member) return;
-function editMember(id) {
-  const member = members.find(item => item.id === id);
-  if (!member) return;
-
-  const newName=prompt("Nouveau pseudo :",member.name);
-  if(newName===null) return;
-  if(!newName.trim()){
-    alert("Le pseudo ne peut pas être vide.");
-    return;
-  }
-  const newName = prompt("Nouveau pseudo :", member.name);
-  if (newName === null) return;
-  if (!newName.trim()) return alert("Le pseudo ne peut pas être vide.");
-
-  const newRank=prompt(
-    "Nouveau grade (ex : ALPHA 1, BETA 2, GAMMA 3, DELTA 4) :",
-    formatRank(member)
-  );
-  if(newRank===null) return;
-  const newRank = prompt("Nouveau grade (ex : ALPHA 1, BÊTA 2, GAMMA 3, DELTA 4) :", formatRank(member));
-  if (newRank === null) return;
-
-  const match=newRank.trim().toUpperCase().match(/^(ALPHA|BETA|BÊTA|GAMMA|DELTA)\s+([1-9]\d*)$/);
-  if(!match){
-    alert("Format invalide. Exemple : DELTA 2.");
-    return;
-  }
-  const match = newRank.trim().toUpperCase().match(/^(ALPHA|BETA|BÊTA|GAMMA|DELTA)\s+([1-9]\d*)$/);
-  if (!match) return alert("Format invalide. Exemple : DELTA 2.");
-
-  const category=match[1]==="BÊTA" ? "BETA" : match[1];
-  const number=Number(match[2]);
-  const category = match[1] === "BÊTA" ? "BETA" : match[1];
-  const number = Number(match[2]);
-
-  const occupied=members.some(item=>
-    item.id!==id && item.category===category && Number(item.number)===number
-  );
-  if(occupied){
-    alert("Ce rang est déjà occupé.");
-  if (!Number.isSafeInteger(number)) return alert("Numéro trop élevé.");
-
-  if (members.some(item => item.id !== id && item.category === category && Number(item.number) === number))
-    return alert("Ce rang est déjà occupé.");
-
-  const old = {...member};
-
-  member.name = newName.trim();
-  member.category = category;
-  member.number = number;
-
-  if (!saveMembers()) Object.assign(member, old);
-
-  renderMembers();
-}
-
-function deleteMember(id) {
-  const member = members.find(item => item.id === id);
-
-  if (!member || !confirm("Supprimer " + member.name + " du classement ?")) return;
-
-  const oldMembers = members;
-  members = members.filter(item => item.id !== id);
-
-  if (!saveMembers()) {
-    members = oldMembers;
-    return;
-  }
-
-  member.name=newName.trim();
-  member.category=category;
-  member.number=number;
-  saveMembers();
-  renderMembers();
-}
-
-function deleteMember(id){
-  const member=members.find(item=>item.id===id);
-  if(!member) return;
-  if(!confirm("Supprimer "+member.name+" du classement ?")) return;
-  members=members.filter(item=>item.id!==id);
-  saveMembers();
-  renderMembers();
-function showMessage(message, type) {
-  const target = document.getElementById("formMessage");
-  target.textContent = message;
-  target.style.color = type === "success" ? "var(--green)" : "var(--red)";
-}
-
-function makeId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-}
-
-function showMessage(message,type){
-  const target=document.getElementById("formMessage");
-  target.textContent=message;
-  target.style.marginTop="12px";
-  target.style.fontSize="12px";
-  target.style.color=type==="success" ? "var(--green)" : "#ff8585";
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, char => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
-  }[char]));
-}
-
-function makeId(){
-  return Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-function escapeAttribute(value) {
-  return escapeHTML(value).replace(/`/g, "&#096;");
-}
-
-const installButton = document.getElementById("installButton");
-
-installButton.addEventListener("click", async () => {
-  if (deferredInstallPrompt) {
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;
-    installButton.classList.add("hidden");
-  } else {
-    showInstallHelp();
-  }
 });
 
-window.addEventListener("beforeinstallprompt", event => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-  installButton.classList.remove("hidden");
-});
-
-window.addEventListener("appinstalled", () => {
-  installButton.classList.add("hidden");
-  deferredInstallPrompt = null;
-});
-
-// Safari sur iPhone/iPad ne déclenche pas beforeinstallprompt.
-const isAppleMobile = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-
-if (isAppleMobile && !isStandalone) installButton.classList.remove("hidden");
-if (isStandalone) installButton.classList.add("hidden");
-
-function showInstallHelp() {
-  const text = document.getElementById("installHelpText");
-  const ua = navigator.userAgent;
-
-  if (/iphone|ipad|ipod/i.test(ua)) {
-    text.textContent = "Dans Safari : touche le bouton Partager, puis « Sur l’écran d’accueil » et confirme avec « Ajouter ». Si tu utilises un autre navigateur, ouvre cette page dans Safari.";
-  } else if (/android/i.test(ua)) {
-    text.textContent = "Dans Chrome : ouvre le menu ⋮ puis choisis « Installer l'application » ou « Ajouter à l'écran d'accueil », selon la version du navigateur.";
-  } else {
-    text.textContent = "Dans Chrome ou Edge : ouvre le menu du navigateur puis choisis « Installer ALSF » ou « Installer cette application ». Tu peux ensuite l'épingler à la barre des tâches.";
-  }
-
-  document.getElementById("installHelp").classList.remove("hidden");
-}
-
-function escapeHTML(value){
-  return String(value).replace(/[&<>"']/g,char=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#039;"
-  })[char]);
-function closeInstallHelp() {
-  document.getElementById("installHelp").classList.add("hidden");
-}
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./service-worker.js")
-      .catch(error=>console.error("Service Worker:",error));
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
-      .then(registration => registration.update())
-      .catch(error => console.error("Service Worker :", error));
+document.querySelectorAll("[data-goto]").forEach(button => {
+  button.addEventListener("click", () => {
+    showMemberPage(button.dataset.goto);
   });
+});
+
+/* ========================================
+   ADMIN : LISTE DES CANDIDATURES
+======================================== */
+
+async function loadApplications() {
+  const target = $("applicationsList");
+  target.textContent = "Chargement...";
+
+  try {
+    const { data, error } = await db
+      .from("lsf_applications")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) throw error;
+
+    const pending = data.filter(item => item.status === "pending");
+
+    if (!pending.length) {
+      target.textContent = "Aucune candidature en attente.";
+      return;
+    }
+
+    target.replaceChildren();
+
+    pending.forEach(application => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const title = document.createElement("h2");
+      title.textContent = application.applicant_name;
+
+      const status = document.createElement("span");
+      status.className = "tag";
+      status.textContent = "EN ATTENTE";
+
+      const motivationLabel = document.createElement("p");
+      motivationLabel.textContent = "MOTIVATION";
+
+      const motivation = document.createElement("p");
+      motivation.textContent = application.motivation;
+      motivation.style.whiteSpace = "pre-wrap";
+
+      const gradeLabel = document.createElement("label");
+      gradeLabel.textContent = "GRADE À ATTRIBUER";
+
+      const grade = document.createElement("select");
+      grade.innerHTML =
+        '<option value="DELTA">DELTA</option>' +
+        '<option value="ALPHA">ALPHA</option>';
+
+      const number = document.createElement("input");
+      number.type = "number";
+      number.min = "1";
+      number.step = "1";
+      number.placeholder = "Numéro du grade";
+      number.value = "1";
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const accept = document.createElement("button");
+      accept.className = "action";
+      accept.textContent = "Accepter";
+
+      const refuse = document.createElement("button");
+      refuse.className = "action danger";
+      refuse.textContent = "Refuser";
+
+      accept.addEventListener("click", () => {
+        reviewApplication(application.id, "accepted", grade.value, Number(number.value), accept);
+      });
+
+      refuse.addEventListener("click", () => {
+        if (confirm("Refuser la candidature de " + application.applicant_name + " ?")) {
+          reviewApplication(application.id, "refused", null, null, refuse);
+        }
+      });
+
+      actions.append(accept, refuse);
+      card.append(title, status, motivationLabel, motivation, gradeLabel, grade, number, actions);
+      target.append(card);
+    });
+
+  } catch (error) {
+    console.error(error);
+    target.textContent = "Impossible de charger les candidatures : " + error.message;
+  }
 }
+
+/* ========================================
+   ADMIN : ACCEPTATION / REFUS
+======================================== */
+
+async function reviewApplication(id, decision, category, number, button) {
+  if (decision === "accepted" &&
+      (!Number.isSafeInteger(number) || number < 1)) {
+    alert("Le numéro du grade doit être un entier supérieur à zéro.");
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+    const { error } = await db.rpc("review_lsf_application", {
+      p_application_id: id,
+      p_decision: decision,
+      p_grade_category: category,
+      p_grade_number: number
+    });
+
+    if (error) throw error;
+
+    alert(decision === "accepted"
+      ? "Candidature acceptée. Le membre a été créé."
+      : "Candidature refusée.");
+
+    await loadApplications();
+
+  } catch (error) {
+    console.error(error);
+    alert("Impossible de traiter cette candidature : " + error.message);
+    button.disabled = false;
+  }
+}
+
+/* ========================================
+   DÉCONNEXION
+======================================== */
+
+$("signOutButton").addEventListener("click", async () => {
+  if (!confirm("Se déconnecter de LSF ?")) return;
+
+  const { error } = await db.auth.signOut();
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  location.reload();
+});
+
+/* ========================================
+   DÉMARRAGE
+======================================== */
+
+initialize();
+</script>
+</body>
+</html>
