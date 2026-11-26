@@ -14,6 +14,7 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icon.svg">
   <title>ALSF | Centre de commandement</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -210,7 +211,7 @@
       </div>
     </div>
     <div class="top-actions">
-      <div class="system-state"><span class="pulse"></span>SYSTÈME ACTIF</div>
+      <div class="system-state" id="connectionState"><span class="pulse"></span>CONNEXION…</div>
       <button id="installButton" class="install-btn hidden" type="button">Installer ALSF</button>
     </div>
   </header>
@@ -292,7 +293,7 @@
           <p>Annuaire interne et organisation hiérarchique de l'Alliance.</p>
         </div>
 
-        <div class="panel">
+        <div class="panel" id="addMemberPanel">
           <div class="panel-head"><h2>Ajouter un membre</h2><span class="panel-note">NOUVELLE INSCRIPTION</span></div>
           <div class="field">
             <label for="memberName">PSEUDO DU MEMBRE</label>
@@ -313,13 +314,13 @@
               <input id="memberNumber" type="number" min="1" step="1" placeholder="Ex : 1">
             </div>
           </div>
-          <button class="primary-btn" onclick="addMember()">+ Ajouter le membre</button>
+          <button id="addMemberButton" class="primary-btn" onclick="addMember()">+ Ajouter le membre</button>
           <p id="formMessage" role="status" aria-live="polite" style="margin-top:12px"></p>
         </div>
 
         <div class="panel">
           <div class="panel-head"><h2>Annuaire des membres</h2><span class="panel-note" id="directoryCount">0 membre</span></div>
-          <div id="memberList"></div>
+          <div id="memberList"><div class="empty">Chargement des effectifs…</div></div>
         </div>
 
         <div class="panel">
@@ -336,7 +337,7 @@
         </div>
         <div class="panel">
           <h2>État de l'application</h2>
-          <div class="notice">Interface ALSF active. Les données des effectifs sont actuellement enregistrées dans le stockage local de ce navigateur.</div>
+          <div class="notice" id="adminStatusNotice">Connexion à Supabase en cours…</div>
         </div>
         <div class="panel">
           <h2>Hiérarchie actuelle</h2>
@@ -344,7 +345,7 @@
         </div>
         <div class="panel">
           <h2>Stockage des données</h2>
-          <p>Cette version utilise le stockage local du navigateur. Les données ne sont donc pas automatiquement partagées entre plusieurs appareils ou plusieurs utilisateurs. Une future synchronisation nécessitera un serveur ou une base de données.</p>
+          <p>Les effectifs sont enregistrés dans Supabase et synchronisés en ligne. Les accès de modification sont contrôlés par les règles de sécurité de la base de données.</p>
         </div>
       </section>
     </main>
@@ -363,45 +364,119 @@
 <script>
 "use strict";
 
-const STORAGE_KEY = "alsf_members_v1";
-const CATEGORY_ORDER = ["ALPHA", "BETA", "GAMMA", "DELTA"];
-const CATEGORY_LABELS = { ALPHA:"ALPHA", BETA:"BÊTA", GAMMA:"GAMMA", DELTA:"DELTA" };
+/* CONFIGURATION SUPABASE */
+const SUPABASE_URL = "https://vmvmvqnhglnthifxkajo.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_K1a5f8DU7-HijfRB4UiDSQ_uD_eB230";
 
-let members = loadMembers();
+const CATEGORY_ORDER = ["ALPHA", "BETA", "GAMMA", "DELTA"];
+const CATEGORY_LABELS = {
+  ALPHA:"ALPHA",
+  BETA:"BÊTA",
+  GAMMA:"GAMMA",
+  DELTA:"DELTA"
+};
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let members = [];
+let isAdmin = false;
+let isReady = false;
 let deferredInstallPrompt = null;
 
-function loadMembers() {
+/* CONNEXION */
+function setConnectionState(message, good = true) {
+  const target = document.getElementById("connectionState");
+  target.textContent = message;
+  target.style.color = good ? "#9aecc7" : "var(--red)";
+}
+
+async function initializeApp() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    return Array.isArray(saved) ? saved.filter(isValidMember) : [];
+    let { data: sessionData, error: sessionError } = await db.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    if (!sessionData.session) {
+      const authResult = await db.auth.signInAnonymously();
+      if (authResult.error) throw authResult.error;
+    }
+
+    const { data: adminResult, error: adminError } = await db.rpc("is_lsf_admin");
+    if (adminError) throw adminError;
+
+    isAdmin = adminResult === true;
+
+    await loadMembers();
+
+    isReady = true;
+    setConnectionState("SUPABASE CONNECTÉ");
+    updateAccessUI();
+    renderMembers();
+    renderStats();
+
   } catch (error) {
-    console.error("Lecture des membres impossible :", error);
-    return [];
+    console.error("Initialisation Supabase impossible :", error);
+    setConnectionState("ERREUR DE CONNEXION", false);
+
+    showMessage(
+      "Connexion impossible : " + (error.message || "erreur inconnue"),
+      "error"
+    );
+
+    document.getElementById("memberList").innerHTML =
+      '<div class="empty">Impossible de charger les effectifs. Vérifie la connexion et les paramètres Supabase.</div>';
+
+    document.getElementById("rankList").innerHTML = "";
+
+    document.getElementById("adminStatusNotice").textContent =
+      "La connexion à Supabase a échoué : " + (error.message || "erreur inconnue");
   }
+}
+
+/* CHARGEMENT DES MEMBRES */
+async function loadMembers() {
+  const { data, error } = await db
+    .from("lsf_directory_members")
+    .select("id, member_name, grade_category, grade_number")
+    .order("grade_number", { ascending: true });
+
+  if (error) throw error;
+
+  members = (data || []).map(row => ({
+    id: row.id,
+    name: row.member_name,
+    category: row.grade_category,
+    number: Number(row.grade_number)
+  })).filter(isValidMember);
 }
 
 function isValidMember(member) {
-  return member && typeof member.name === "string" &&
+  return member &&
+    typeof member.name === "string" &&
     CATEGORY_ORDER.includes(member.category) &&
-    Number.isInteger(Number(member.number)) && Number(member.number) > 0;
+    Number.isInteger(Number(member.number)) &&
+    Number(member.number) > 0;
 }
 
-function saveMembers() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-    return true;
-  } catch (error) {
-    console.error("Sauvegarde impossible :", error);
-    showMessage("La sauvegarde locale a échoué. Vérifie l'espace disponible du navigateur.", "error");
-    return false;
-  }
+/* DROITS */
+function updateAccessUI() {
+  const addPanel = document.getElementById("addMemberPanel");
+
+  addPanel.classList.toggle("hidden", !isAdmin);
+
+  document.getElementById("adminStatusNotice").textContent = isAdmin
+    ? "Connexion Supabase active. Ton compte dispose des droits d'administration des effectifs."
+    : "Connexion Supabase active. Mode consultation : seuls les administrateurs autorisés peuvent ajouter, modifier ou supprimer des membres.";
 }
 
+/* NAVIGATION */
 function showPage(page) {
   const selected = document.getElementById(page);
   if (!selected) return;
 
-  document.querySelectorAll("main > section").forEach(section => section.classList.add("hidden"));
+  document.querySelectorAll("main > section").forEach(section => {
+    section.classList.add("hidden");
+  });
+
   selected.classList.remove("hidden");
   selected.style.animation = "none";
   void selected.offsetWidth;
@@ -411,18 +486,21 @@ function showPage(page) {
     button.classList.toggle("active", button.dataset.page === page);
   });
 
-  window.scrollTo({top:0, behavior:"smooth"});
+  window.scrollTo({ top:0, behavior:"smooth" });
 
   if (page === "members") renderMembers();
   if (page === "home") renderStats();
 }
 
+/* HIÉRARCHIE */
 function getRankNumber(member) {
   return Number(member.number);
 }
 
 function compareMembers(a, b) {
-  const categoryDifference = CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+  const categoryDifference =
+    CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
+
   return categoryDifference || getRankNumber(a) - getRankNumber(b);
 }
 
@@ -434,21 +512,29 @@ function formatRank(member) {
   return CATEGORY_LABELS[member.category] + " " + member.number;
 }
 
+/* STATISTIQUES */
 function renderStats() {
   document.getElementById("totalMembers").textContent = members.length;
-  document.getElementById("alphaMembers").textContent = members.filter(m => m.category === "ALPHA").length;
-  document.getElementById("deltaMembers").textContent = members.filter(m => m.category === "DELTA").length;
+
+  document.getElementById("alphaMembers").textContent =
+    members.filter(m => m.category === "ALPHA").length;
+
+  document.getElementById("deltaMembers").textContent =
+    members.filter(m => m.category === "DELTA").length;
 }
 
+/* AFFICHAGE DES MEMBRES */
 function renderMembers() {
   const sorted = [...members].sort(compareMembers);
   const list = document.getElementById("memberList");
   const rankList = document.getElementById("rankList");
 
-  document.getElementById("directoryCount").textContent = `${sorted.length} membre${sorted.length > 1 ? "s" : ""}`;
+  document.getElementById("directoryCount").textContent =
+    `${sorted.length} membre${sorted.length > 1 ? "s" : ""}`;
 
   if (!sorted.length) {
-    list.innerHTML = '<div class="empty">Aucun membre enregistré pour le moment.</div>';
+    list.innerHTML =
+      '<div class="empty">Aucun membre enregistré pour le moment.</div>';
   } else {
     list.innerHTML = sorted.map(member => `
       <div class="member">
@@ -456,118 +542,218 @@ function renderMembers() {
           <div class="member-name">${escapeHTML(member.name)}</div>
           <div class="member-rank">Membre de l'Alliance</div>
         </div>
-        <span class="rank ${rankClass(member.category)}">${formatRank(member)}</span>
-        <div class="member-actions">
-          <button class="small-action" onclick="editMember('${escapeAttribute(member.id)}')">Modifier</button>
-          <button class="small-action" onclick="deleteMember('${escapeAttribute(member.id)}')">Supprimer</button>
-        </div>
-      </div>`).join("");
+
+        <span class="rank ${rankClass(member.category)}">
+          ${formatRank(member)}
+        </span>
+
+        ${isAdmin ? `
+          <div class="member-actions">
+            <button class="small-action" onclick="editMember('${escapeAttribute(member.id)}')">Modifier</button>
+            <button class="small-action" onclick="deleteMember('${escapeAttribute(member.id)}')">Supprimer</button>
+          </div>
+        ` : ""}
+      </div>
+    `).join("");
   }
 
   rankList.innerHTML = CATEGORY_ORDER.map(category => {
     const group = sorted.filter(member => member.category === category);
 
-    return `<div class="rank-heading">${CATEGORY_LABELS[category]}</div>` +
-      (group.length ? group.map(member => `
-        <div class="member">
-          <div class="member-info"><div class="member-name">${escapeHTML(member.name)}</div></div>
-          <span class="rank ${rankClass(category)}">${formatRank(member)}</span>
-        </div>`).join("") : '<div class="empty">Aucun membre dans cette catégorie.</div>');
+    return `
+      <div class="rank-heading">${CATEGORY_LABELS[category]}</div>
+      ${
+        group.length
+          ? group.map(member => `
+              <div class="member">
+                <div class="member-info">
+                  <div class="member-name">${escapeHTML(member.name)}</div>
+                </div>
+                <span class="rank ${rankClass(category)}">
+                  ${formatRank(member)}
+                </span>
+              </div>
+            `).join("")
+          : '<div class="empty">Aucun membre dans cette catégorie.</div>'
+      }
+    `;
   }).join("");
 
   renderStats();
 }
 
-function addMember() {
+/* AJOUT */
+async function addMember() {
+  if (!isReady) {
+    return showMessage("La connexion n'est pas encore prête.", "error");
+  }
+
+  if (!isAdmin) {
+    return showMessage("Tu n'as pas les droits pour ajouter un membre.", "error");
+  }
+
   const nameInput = document.getElementById("memberName");
   const category = document.getElementById("memberCategory").value;
   const number = Number(document.getElementById("memberNumber").value);
   const name = nameInput.value.trim();
 
-  if (!name) return showMessage("Entre un pseudo pour le membre.", "error");
+  if (!name) {
+    return showMessage("Entre un pseudo pour le membre.", "error");
+  }
 
-  if (!Number.isSafeInteger(number) || number < 1)
+  if (!Number.isSafeInteger(number) || number < 1) {
     return showMessage("Le numéro doit être un entier supérieur ou égal à 1.", "error");
+  }
 
-  if (members.some(member => member.category === category && Number(member.number) === number))
+  if (members.some(member =>
+    member.category === category && Number(member.number) === number
+  )) {
     return showMessage("Ce rang est déjà occupé par un autre membre.", "error");
+  }
 
-  members.push({id:makeId(), name, category, number});
+  const button = document.getElementById("addMemberButton");
+  button.disabled = true;
+  button.textContent = "Enregistrement…";
 
-  if (!saveMembers()) {
-    members.pop();
-    return;
+  const { error } = await db
+    .from("lsf_directory_members")
+    .insert({
+      member_name: name,
+      grade_category: category,
+      grade_number: number
+    });
+
+  button.disabled = false;
+  button.textContent = "+ Ajouter le membre";
+
+  if (error) {
+    console.error(error);
+    return showMessage("Échec de l'enregistrement : " + error.message, "error");
   }
 
   nameInput.value = "";
   document.getElementById("memberNumber").value = "";
 
-  showMessage("Membre ajouté au classement ALSF.", "success");
-  renderMembers();
+  try {
+    await loadMembers();
+    showMessage("Membre ajouté et enregistré dans Supabase.", "success");
+    renderMembers();
+  } catch (error) {
+    showMessage("Membre enregistré, mais actualisation impossible : " + error.message, "error");
+  }
 }
 
-function editMember(id) {
+/* MODIFICATION */
+async function editMember(id) {
+  if (!isAdmin) return;
+
   const member = members.find(item => item.id === id);
   if (!member) return;
 
   const newName = prompt("Nouveau pseudo :", member.name);
   if (newName === null) return;
-  if (!newName.trim()) return alert("Le pseudo ne peut pas être vide.");
 
-  const newRank = prompt("Nouveau grade (ex : ALPHA 1, BÊTA 2, GAMMA 3, DELTA 4) :", formatRank(member));
+  if (!newName.trim()) {
+    return alert("Le pseudo ne peut pas être vide.");
+  }
+
+  const newRank = prompt(
+    "Nouveau grade (ex : ALPHA 1, BÊTA 2, GAMMA 3, DELTA 4) :",
+    formatRank(member)
+  );
+
   if (newRank === null) return;
 
-  const match = newRank.trim().toUpperCase().match(/^(ALPHA|BETA|BÊTA|GAMMA|DELTA)\s+([1-9]\d*)$/);
-  if (!match) return alert("Format invalide. Exemple : DELTA 2.");
+  const match = newRank.trim().toUpperCase().match(
+    /^(ALPHA|BETA|BÊTA|GAMMA|DELTA)\s+([1-9]\d*)$/
+  );
+
+  if (!match) {
+    return alert("Format invalide. Exemple : DELTA 2.");
+  }
 
   const category = match[1] === "BÊTA" ? "BETA" : match[1];
   const number = Number(match[2]);
 
-  if (!Number.isSafeInteger(number)) return alert("Numéro trop élevé.");
+  if (!Number.isSafeInteger(number)) {
+    return alert("Numéro trop élevé.");
+  }
 
-  if (members.some(item => item.id !== id && item.category === category && Number(item.number) === number))
+  if (members.some(item =>
+    item.id !== id &&
+    item.category === category &&
+    Number(item.number) === number
+  )) {
     return alert("Ce rang est déjà occupé.");
+  }
 
-  const old = {...member};
+  const { error } = await db
+    .from("lsf_directory_members")
+    .update({
+      member_name: newName.trim(),
+      grade_category: category,
+      grade_number: number,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
 
-  member.name = newName.trim();
-  member.category = category;
-  member.number = number;
+  if (error) {
+    console.error(error);
+    return alert("Modification impossible : " + error.message);
+  }
 
-  if (!saveMembers()) Object.assign(member, old);
-
-  renderMembers();
+  try {
+    await loadMembers();
+    renderMembers();
+  } catch (error) {
+    alert("Modification enregistrée, mais actualisation impossible : " + error.message);
+  }
 }
 
-function deleteMember(id) {
+/* SUPPRESSION */
+async function deleteMember(id) {
+  if (!isAdmin) return;
+
   const member = members.find(item => item.id === id);
 
-  if (!member || !confirm("Supprimer " + member.name + " du classement ?")) return;
-
-  const oldMembers = members;
-  members = members.filter(item => item.id !== id);
-
-  if (!saveMembers()) {
-    members = oldMembers;
+  if (!member || !confirm("Supprimer " + member.name + " du classement ?")) {
     return;
   }
 
-  renderMembers();
+  const { error } = await db
+    .from("lsf_directory_members")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    return alert("Suppression impossible : " + error.message);
+  }
+
+  try {
+    await loadMembers();
+    renderMembers();
+  } catch (error) {
+    alert("Suppression enregistrée, mais actualisation impossible : " + error.message);
+  }
 }
 
+/* MESSAGES */
 function showMessage(message, type) {
   const target = document.getElementById("formMessage");
+
   target.textContent = message;
   target.style.color = type === "success" ? "var(--green)" : "var(--red)";
 }
 
-function makeId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-}
-
+/* SÉCURITÉ AFFICHAGE HTML */
 function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, char => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
   }[char]));
 }
 
@@ -575,6 +761,7 @@ function escapeAttribute(value) {
   return escapeHTML(value).replace(/`/g, "&#096;");
 }
 
+/* INSTALLATION PWA */
 const installButton = document.getElementById("installButton");
 
 installButton.addEventListener("click", async () => {
@@ -599,12 +786,18 @@ window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
 });
 
-// Safari sur iPhone/iPad ne déclenche pas beforeinstallprompt.
 const isAppleMobile = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+const isStandalone =
+  window.matchMedia("(display-mode: standalone)").matches ||
+  window.navigator.standalone === true;
 
-if (isAppleMobile && !isStandalone) installButton.classList.remove("hidden");
-if (isStandalone) installButton.classList.add("hidden");
+if (isAppleMobile && !isStandalone) {
+  installButton.classList.remove("hidden");
+}
+
+if (isStandalone) {
+  installButton.classList.add("hidden");
+}
 
 function showInstallHelp() {
   const text = document.getElementById("installHelpText");
@@ -625,15 +818,17 @@ function closeInstallHelp() {
   document.getElementById("installHelp").classList.add("hidden");
 }
 
+/* SERVICE WORKER */
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js", {scope:"./"})
+    navigator.serviceWorker.register("./service-worker.js", { scope:"./" })
       .then(registration => registration.update())
       .catch(error => console.error("Service Worker :", error));
   });
 }
 
-renderMembers();
+/* DÉMARRAGE */
+initializeApp();
 </script>
 </body>
 </html>
